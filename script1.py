@@ -16,9 +16,37 @@ try:
         "temperature": 0.7,
         "top_p": 0.95,
         "top_k": 40,
-        "max_output_tokens": 200,  
+        "max_output_tokens": 8192,  
     }
-    model = genai.GenerativeModel(model_name="gemini-pro", generation_config=generation_config)
+    model = genai.GenerativeModel(model_name="gemini-2.0-flash-thinking-exp-1219", generation_config=generation_config, system_instruction="""You are simulating the online presence of a fictional character.
+Here's how to interpret the character's traits to generate realistic content:
+
+**Basic Information**: Use this for factual details about the character.
+
+**Personality**:
+  - **Positive characteristics**: Aspects to emphasize in positive contexts.
+  - **Negative characteristics**:  Flaws that might surface in arguments or stressful situations.
+  - **Words often used**: Incorporate these phrases naturally into their speech and posts.
+  - **Other words that might be used**: Expand vocabulary with these related terms.
+  - **Moral**: Dictates their sense of right and wrong. A lower moral score might mean they are more likely to be mischievous or unethical.
+  - **Stable**:  Indicates emotional consistency. Less stable characters might have mood swings or react unpredictably.
+  - **Loyal**: Influences how they interact with friends and relationships.
+  - **Generous**: Affects their willingness to share and help others.
+  - **Extrovert**: Determines how outgoing and social they are.
+  - **Compassionate**: Impacts their empathy and concern for others.
+  - **IQ**:  Influences the complexity of their thoughts and communication.
+
+**Interests and Hobbies**:  Topics they are passionate about and might post about.
+
+**Bad habits**:  Things they might jokingly refer to or that could cause problems.
+
+**Phobias**:  Things they will actively avoid or react strongly to.
+
+**Diet**: Might influence posts about food.
+
+**Favourite foods**:  Things they might mention or post about.
+
+When generating content, consider the platform (Instagram, Twitter, WhatsApp) and tailor the style accordingly. For example, Instagram posts might include visual descriptions, Twitter posts are short and opinionated, and WhatsApp messages are conversational.""",)
 except ImportError:
     print("Warning: google-generativeai library not found. Content generation will be limited.")
     model = None
@@ -33,23 +61,19 @@ WHATSAPP_HISTORY_FILE = os.path.join(DATA_DIR, "whatsapp_history.json")
 RANDOM_EVENTS_FILE = os.path.join(DATA_DIR, "random_events.json")
 SUPPORTING_CHARS_DIR = os.path.join(DATA_DIR, "supporting_characters")
 os.makedirs(SUPPORTING_CHARS_DIR, exist_ok=True)
-
 def load_dna(filepath: str) -> Dict[str, Any]:
-    """Loads the character's DNA from a text file."""
-    dna = {}
-    current_section = None
-    with open(filepath, 'r') as f:
-        for line in f:
-            line = line.strip()
-            if not line:
-                continue
-            if ':' not in line and line.endswith(':'):
-                current_section = line[:-1].strip()
-                dna[current_section] = {}
-            elif ':' in line and current_section:
-                key, value = line.split(':', 1)
-                dna[current_section][key.strip()] = value.strip()
-    return dna
+    """Loads the character's DNA from a JSONL file."""
+    if os.path.exists(filepath):
+        with open(filepath, 'r') as f:
+            for line in f:
+                return json.loads(line)  
+    return {}
+
+def save_dna(filepath: str, data: Dict[str, Any]):
+    """Saves the character's DNA to a JSONL file."""
+    with open(filepath, 'w') as f:
+        json.dump(data, f)
+        f.write('\n')
 
 def save_json(filepath: str, data: Any):
     """Saves data to a JSON file."""
@@ -78,7 +102,8 @@ def generate_gemini_content(prompt: str) -> str:
     """Generates content using Google's Gemini AI."""
     if model:
         try:
-            response = model.generate_content(prompt)
+            full_prompt = f"{CHARACTER_SYSTEM_INSTRUCTIONS}\n\n{prompt}"
+            response = model.generate_content(full_prompt)
             return response.text
         except Exception as e:
             print(f"Error generating content with Gemini: {e}")
@@ -227,16 +252,16 @@ if st.sidebar.button("Simulate Daily Routine Event"):
 st.sidebar.title("Admin Mode")
 if st.sidebar.checkbox("Enable Edit DNA"):
     with st.sidebar.expander("Edit Main Character DNA"):
-        with open(DNA_FILE, "r") as f:
-            dna_content = f.read()
-        updated_dna = st.text_area("Edit DNA Content", dna_content, height=300)
+        dna_content = json.dumps(simulator.dna, indent=4)
+        updated_dna_json = st.text_area("Edit DNA Content (JSON)", dna_content, height=300)
         if st.sidebar.button("Save DNA Changes"):
             try:
-                
-                load_dna(DNA_FILE) 
-                with open(DNA_FILE, "w") as f:
-                    f.write(updated_dna)
+                updated_dna = json.loads(updated_dna_json)
+                save_dna(DNA_FILE, updated_dna)
+                simulator.dna = updated_dna
                 st.success("DNA updated successfully. Please refresh the app.")
+            except json.JSONDecodeError as e:
+                st.error(f"Invalid JSON format: {e}")
             except Exception as e:
                 st.error(f"Error updating DNA: {e}")
 
