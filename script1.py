@@ -69,9 +69,10 @@ TWITTER_HISTORY_FILE = os.path.join(DATA_DIR, "twitter_history.json")
 WHATSAPP_HISTORY_FILE = os.path.join(DATA_DIR, "whatsapp_history.json")
 RANDOM_EVENTS_FILE = os.path.join(DATA_DIR, "random_events.json")
 SUPPORTING_CHARS_DIR = os.path.join(DATA_DIR, "supporting_characters")
+RELATIONSHIP_FILE = os.path.join(DATA_DIR, "relationships.json")
 os.makedirs(SUPPORTING_CHARS_DIR, exist_ok=True)
 
-
+# Modified load function to handle both json and jsonl
 def load_character_dna(filepath: str) -> Dict[str, Any]:
     """Loads character's DNA from a JSON or JSONL file."""
     if os.path.exists(filepath):
@@ -117,7 +118,7 @@ def load_supporting_characters() -> Dict[str, Dict[str, Any]]:
     for filename in os.listdir(SUPPORTING_CHARS_DIR):
         if filename.endswith(".json"):
             filepath = os.path.join(SUPPORTING_CHARS_DIR, filename)
-            char_data = load_character_dna(filepath)  
+            char_data = load_character_dna(filepath)  # Updated to use our load function
             if char_data:
                characters[char_data['name']] = char_data
     return characters
@@ -138,17 +139,32 @@ def generate_gemini_content(prompt: str) -> str:
 
 class CharacterSimulator:
     def __init__(self):
-        self.dna = load_character_dna(DNA_FILE)  
+        self.dna = load_character_dna(DNA_FILE)  # Updated load function here
         self.instagram_history = load_json(INSTAGRAM_HISTORY_FILE)
         self.twitter_history = load_json(TWITTER_HISTORY_FILE)
         self.whatsapp_history = load_json(WHATSAPP_HISTORY_FILE)
         self.random_events = load_json(RANDOM_EVENTS_FILE)
         self.supporting_characters = load_supporting_characters()
         self.name = self.dna.get("Basic Information", {}).get("Name", "AI Character")
+        self.relationships = load_json(RELATIONSHIP_FILE)  # Load relationships
 
     def _get_random_supporting_character(self):
         if self.supporting_characters:
-            return random.choice(list(self.supporting_characters.values()))
+           
+            available_characters = list(self.supporting_characters.values())
+            
+            if not self.relationships:
+               return random.choice(available_characters)
+            
+            weights = []
+            for char in available_characters:
+               if char["name"] in self.relationships:
+                  weights.append(self.relationships[char["name"]]["interaction_frequency"])
+               else:
+                  weights.append(0.1)
+            
+            
+            return random.choices(available_characters, weights=weights, k=1)[0]
         return None
 
     def _generate_social_media_post(self, platform: str, prompt_prefix: str = ""):
@@ -224,7 +240,7 @@ class CharacterSimulator:
         hour = datetime.now().hour
         event = None
         
-        
+        #Try to load the random events
         random_events_data = load_json(RANDOM_EVENTS_FILE)
         if isinstance(random_events_data, dict) and "events" in random_events_data:
           events = random_events_data["events"]
