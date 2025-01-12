@@ -128,7 +128,7 @@ def generate_gemini_content(prompt: str) -> str:
     """Generates content using Google's Gemini AI."""
     if model:
         try:
-            full_prompt = f"{CHARACTER_SYSTEM_INSTRUCTIONS}\n\n{prompt}"
+            full_prompt = f"{prompt}"
             response = model.generate_content(full_prompt)
             return response.text
         except Exception as e:
@@ -147,6 +147,15 @@ class CharacterSimulator:
         self.supporting_characters = load_supporting_characters()
         self.name = self.dna.get("Basic Information", {}).get("Name", "AI Character")
         self.relationships = load_json(RELATIONSHIP_FILE)  # Load relationships
+    
+    def _get_character_context(self, character_dna):
+       """Creates a string with character context for the llm prompt"""
+       context = f"The character's name is {character_dna.get('Basic Information',{}).get('Name','Unknown')}. "
+       context += f"Their personality traits are: {character_dna.get('Personality', {}).get('Positive characteristics', [])} , negative traits are {character_dna.get('Personality', {}).get('Negative characteristics', [])} , they often use the words: {character_dna.get('Personality',{}).get('Words often used',[])} and also other words that they might use are: {character_dna.get('Personality',{}).get('Other words that might be used',[])} . "
+       context += f"Their current mood is: {character_dna.get('current_mood', 'Neutral')}, their energy level is {character_dna.get('energy_level', 5)} , their social battery level is {character_dna.get('social_battery',5)} and their stress level is {character_dna.get('stress_level',5)}. "
+       context += f"They enjoy the hobbies: {', '.join(character_dna.get('Hobbies', []))}. Their diet is {character_dna.get('Diet', 'unknown')} and their favourite foods are {', '.join(character_dna.get('Favourite foods', []))}"
+       return context
+
 
     def _get_random_supporting_character(self):
         if self.supporting_characters:
@@ -167,44 +176,66 @@ class CharacterSimulator:
             return random.choices(available_characters, weights=weights, k=1)[0]
         return None
 
-    def _generate_social_media_post(self, platform: str, prompt_prefix: str = ""):
-        if model:
-            prompt = f"{prompt_prefix} Generate a social media post for {self.name} on {platform} based on their personality, current mood, stress level, energy level, and social battery. "
-            if platform == "Instagram":
-                prompt += "Include a short caption and suggest a visual description."
-            elif platform == "Twitter":
-                prompt += "Keep it concise and reflect their typical tone."
-            response_text = generate_gemini_content(prompt)
-            return response_text
-        else:
-            return f"Simulated {platform} post from {self.name}: [No AI content generated]"
+    def _generate_social_media_post(self, platform: str):
+        """Generates a social media post."""
+        prompt_prefix = f"You are simulating a social media post for {self.name}."
+        character_context = self._get_character_context(self.dna)
+        
+        if platform == "Instagram":
+             
+            prompt_describe = f"{prompt_prefix} {character_context} Generate a short description of the post including the item in the photo and the emotion, like 'posted a picture of their new dog while looking happy', limit to 12 words"
 
-    def _generate_whatsapp_message(self, recipient_name: str, prompt_prefix: str = ""):
-        if model:
-            prompt = f"{prompt_prefix} Simulate a WhatsApp message from {self.name} to {recipient_name} based on their personalities, current mood, stress level, energy level, social battery and relationship."
-            return generate_gemini_content(prompt)
-        else:
-            return f"{self.name}: [Simulated message to {recipient_name}]"
+            description = generate_gemini_content(prompt_describe)
+            
+            prompt_content = f"{prompt_prefix} {character_context} Based on the post description : '{description}', generate a short caption for the post. Include a suggestion for a visual description (if not using real images) as well. Limit to 25 words"
+            content = generate_gemini_content(prompt_content)
+            return {"description": description, "content": content}
+
+
+        elif platform == "Twitter":
+            prompt_content = f"{prompt_prefix} {character_context} Generate a short, opinionated Tweet (no more than 280 characters). "
+            content = generate_gemini_content(prompt_content)
+            return {"content": content}
+
+    def _generate_whatsapp_message(self, recipient_dna: Dict[str, Any]):
+        """Generates a WhatsApp message."""
+        recipient_name = recipient_dna.get('Basic Information', {}).get('Name', 'Unknown')
+        
+        sender_context = self._get_character_context(self.dna)
+        reciever_context = self._get_character_context(recipient_dna)
+        
+        prompt = f"You are simulating a whatsapp message. {sender_context} The main character wants to message {recipient_name} who is {reciever_context}. Simulate a short Whatsapp message from {self.name} to {recipient_name}."
+        message = generate_gemini_content(prompt)
+        return message
 
     def simulate_instagram_post(self):
-        post_content = self._generate_social_media_post("Instagram")
+        post_data = self._generate_social_media_post("Instagram")
+        post_content = post_data.get('content', 'Error generating content')
+        post_description = post_data.get('description', 'Error generating description')
         likes = random.randint(10, 300)
         comments = []
         num_comments = random.randint(0, 5)
+        
         for _ in range(num_comments):
-            commenter = self._get_random_supporting_character()
-            if commenter:
-                comment_prompt = f"Generate a short comment from {commenter['name']} on a post by {self.name} based on their personalities, current mood, stress level, energy level, and social battery."
-                comment_text = generate_gemini_content(comment_prompt) if model else "Nice post!"
-                comments.append({"author": commenter['name'], "text": comment_text})
-
-        post = {"timestamp": datetime.now().isoformat(), "content": post_content, "likes": likes, "comments": comments}
+          commenter = self._get_random_supporting_character()
+          if commenter:
+                
+            commenter_context = self._get_character_context(commenter)
+            
+            relationship = self.relationships.get(commenter["name"],{}).get("relationship", "unknown")
+            
+            prompt = f"You are simulating a comment on an instagram post. The post description is {post_description} and the content is '{post_content}'. {commenter_context} Simulate a short comment from {commenter['name']} in response to the post. The relationship with the poster is : {relationship}"
+            comment_text = generate_gemini_content(prompt) if model else "Nice post!"
+            comments.append({"author": commenter['name'], "text": comment_text})
+            
+        post = {"timestamp": datetime.now().isoformat(), "description": post_description ,"content": post_content, "likes": likes, "comments": comments}
         self.instagram_history.append(post)
         save_json(INSTAGRAM_HISTORY_FILE, self.instagram_history)
         return post
 
     def simulate_twitter_post(self):
-        post_content = self._generate_social_media_post("Twitter")
+        post_data = self._generate_social_media_post("Twitter")
+        post_content = post_data.get('content', "Error generating tweet")
         post = {"timestamp": datetime.now().isoformat(), "content": post_content}
         self.twitter_history.append(post)
         save_json(TWITTER_HISTORY_FILE, self.twitter_history)
@@ -215,7 +246,7 @@ class CharacterSimulator:
         if not recipient:
             return None
 
-        message_to_recipient = self._generate_whatsapp_message(recipient['name'])
+        message_to_recipient = self._generate_whatsapp_message(recipient)
         self.whatsapp_history.append({
             "timestamp": datetime.now().isoformat(),
             "sender": self.name,
@@ -224,8 +255,10 @@ class CharacterSimulator:
         })
 
         
-        response_prompt = f"Simulate a WhatsApp response from {recipient['name']} to {self.name}'s message: '{message_to_recipient}' based on their personalities, current mood, stress level, energy level, and social battery."
-        response_message = generate_gemini_content(response_prompt) if model else "Okay."
+        sender_context = self._get_character_context(self.dna)
+        reciever_context = self._get_character_context(recipient)
+        prompt = f"You are simulating a whatsapp message response. {sender_context} The main character message was '{message_to_recipient}'. {reciever_context} Simulate a short Whatsapp message from {recipient['name']} to {self.name} in response to the above message."
+        response_message = generate_gemini_content(prompt) if model else "Okay."
         self.whatsapp_history.append({
             "timestamp": datetime.now().isoformat(),
             "sender": recipient['name'],
@@ -363,6 +396,8 @@ if platform == "Instagram":
     st.subheader("Instagram")
     for post in reversed(simulator.instagram_history):
         st.write(f"**{simulator.name}** - {post['timestamp']}")
+        if 'description' in post:
+            st.write(f"Description: {post['description']}") # Only display if it exists
         st.write(post['content'])
         if "suggested_visual" in post.get('gemini_data', {}):
             st.image("https://placekitten.com/200/300", caption=post['gemini_data']['suggested_visual']) 
