@@ -6,7 +6,7 @@ from datetime import datetime
 import schedule
 import time
 from typing import Dict, Any, List
-
+import threading
 
 try:
     import google.generativeai as genai
@@ -19,34 +19,43 @@ try:
         "max_output_tokens": 8192,  
     }
     model = genai.GenerativeModel(model_name="gemini-2.0-flash-thinking-exp-1219", generation_config=generation_config, system_instruction="""You are simulating the online presence of a fictional character.
-Here's how to interpret the character's traits to generate realistic content:
-
-**Basic Information**: Use this for factual details about the character.
-
-**Personality**:
-  - **Positive characteristics**: Aspects to emphasize in positive contexts.
-  - **Negative characteristics**:  Flaws that might surface in arguments or stressful situations.
-  - **Words often used**: Incorporate these phrases naturally into their speech and posts.
-  - **Other words that might be used**: Expand vocabulary with these related terms.
-  - **Moral**: Dictates their sense of right and wrong. A lower moral score might mean they are more likely to be mischievous or unethical.
-  - **Stable**:  Indicates emotional consistency. Less stable characters might have mood swings or react unpredictably.
-  - **Loyal**: Influences how they interact with friends and relationships.
-  - **Generous**: Affects their willingness to share and help others.
-  - **Extrovert**: Determines how outgoing and social they are.
-  - **Compassionate**: Impacts their empathy and concern for others.
-  - **IQ**:  Influences the complexity of their thoughts and communication.
-
-**Interests and Hobbies**:  Topics they are passionate about and might post about.
-
-**Bad habits**:  Things they might jokingly refer to or that could cause problems.
-
-**Phobias**:  Things they will actively avoid or react strongly to.
-
-**Diet**: Might influence posts about food.
-
-**Favourite foods**:  Things they might mention or post about.
-
-When generating content, consider the platform (Instagram, Twitter, WhatsApp) and tailor the style accordingly. For example, Instagram posts might include visual descriptions, Twitter posts are short and opinionated, and WhatsApp messages are conversational.""",)
+    Here's how to interpret the character's traits to generate realistic content:
+    
+    **Basic Information**: Use this for factual details about the character.
+    
+    **Personality**:
+      - **Positive characteristics**: Aspects to emphasize in positive contexts.
+      - **Negative characteristics**:  Flaws that might surface in arguments or stressful situations.
+      - **Words often used**: Incorporate these phrases naturally into their speech and posts.
+      - **Other words that might be used**: Expand vocabulary with these related terms.
+      - **Moral**: Dictates their sense of right and wrong. A lower moral score might mean they are more likely to be mischievous or unethical.
+      - **Stable**:  Indicates emotional consistency. Less stable characters might have mood swings or react unpredictably.
+      - **Loyal**: Influences how they interact with friends and relationships.
+      - **Generous**: Affects their willingness to share and help others.
+      - **Extrovert**: Determines how outgoing and social they are.
+      - **Compassionate**: Impacts their empathy and concern for others.
+      - **IQ**:  Influences the complexity of their thoughts and communication.
+    
+    **Current Mood**: Affects the general tone and content of posts and interactions. For example, a 'Hungry' character might mention food. A 'Diseased' character might express complaints or concerns about their health.
+    
+     **Energy Level**: affects the characters activity levels, a lower energy character may be lazier
+    
+    **Social Battery**: Affects how social the character is feeling, low social battery will make the character less talkative
+    
+    **Stress Level**: Affects how the character expresses themselves, high stress will lead to irritation
+    
+    **Interests and Hobbies**:  Topics they are passionate about and might post about.
+    
+    **Bad habits**:  Things they might jokingly refer to or that could cause problems.
+    
+    **Phobias**:  Things they will actively avoid or react strongly to.
+    
+    **Diet**: Might influence posts about food.
+    
+    **Favourite foods**:  Things they might mention or post about.
+    
+    When generating content, consider the platform (Instagram, Twitter, WhatsApp) and tailor the style accordingly. For example, Instagram posts might include visual descriptions, Twitter posts are short and opinionated, and WhatsApp messages are conversational.
+    """,)
 except ImportError:
     print("Warning: google-generativeai library not found. Content generation will be limited.")
     model = None
@@ -54,26 +63,41 @@ except ImportError:
 DATA_DIR = "data"
 os.makedirs(DATA_DIR, exist_ok=True)
 
-DNA_FILE = os.path.join(DATA_DIR, "dna_main.txt")
+DNA_FILE = os.path.join(DATA_DIR, "dna_main.jsonl")
 INSTAGRAM_HISTORY_FILE = os.path.join(DATA_DIR, "instagram_history.json")
 TWITTER_HISTORY_FILE = os.path.join(DATA_DIR, "twitter_history.json")
 WHATSAPP_HISTORY_FILE = os.path.join(DATA_DIR, "whatsapp_history.json")
 RANDOM_EVENTS_FILE = os.path.join(DATA_DIR, "random_events.json")
 SUPPORTING_CHARS_DIR = os.path.join(DATA_DIR, "supporting_characters")
 os.makedirs(SUPPORTING_CHARS_DIR, exist_ok=True)
-def load_dna(filepath: str) -> Dict[str, Any]:
-    """Loads the character's DNA from a JSONL file."""
+
+# Modified load function to handle both json and jsonl
+def load_character_dna(filepath: str) -> Dict[str, Any]:
+    """Loads character's DNA from a JSON or JSONL file."""
     if os.path.exists(filepath):
-        with open(filepath, 'r') as f:
-            for line in f:
-                return json.loads(line)  
+        try:
+           if filepath.endswith(".jsonl"):
+                with open(filepath, 'r') as f:
+                  for line in f:
+                     return json.loads(line)
+           else:
+              with open(filepath, 'r') as f:
+                  return json.load(f)
+        except json.JSONDecodeError:
+            print(f"Error decoding JSON from {filepath}. Ensure it's valid JSON/JSONL.")
+            return {}
     return {}
 
-def save_dna(filepath: str, data: Dict[str, Any]):
-    """Saves the character's DNA to a JSONL file."""
-    with open(filepath, 'w') as f:
-        json.dump(data, f)
-        f.write('\n')
+
+def save_character_dna(filepath: str, data: Dict[str, Any]):
+    """Saves character's DNA to a JSON or JSONL file."""
+    if filepath.endswith(".jsonl"):
+        with open(filepath, 'w') as f:
+            json.dump(data, f)
+            f.write('\n')
+    else:
+        with open(filepath, 'w') as f:
+            json.dump(data, f, indent=4)
 
 def save_json(filepath: str, data: Any):
     """Saves data to a JSON file."""
@@ -93,10 +117,11 @@ def load_supporting_characters() -> Dict[str, Dict[str, Any]]:
     for filename in os.listdir(SUPPORTING_CHARS_DIR):
         if filename.endswith(".json"):
             filepath = os.path.join(SUPPORTING_CHARS_DIR, filename)
-            with open(filepath, 'r') as f:
-                char_data = json.load(f)
-                characters[char_data['name']] = char_data
+            char_data = load_character_dna(filepath)  # Updated to use our load function
+            if char_data:
+               characters[char_data['name']] = char_data
     return characters
+
 
 def generate_gemini_content(prompt: str) -> str:
     """Generates content using Google's Gemini AI."""
@@ -113,7 +138,7 @@ def generate_gemini_content(prompt: str) -> str:
 
 class CharacterSimulator:
     def __init__(self):
-        self.dna = load_dna(DNA_FILE)
+        self.dna = load_character_dna(DNA_FILE)  # Updated load function here
         self.instagram_history = load_json(INSTAGRAM_HISTORY_FILE)
         self.twitter_history = load_json(TWITTER_HISTORY_FILE)
         self.whatsapp_history = load_json(WHATSAPP_HISTORY_FILE)
@@ -128,7 +153,7 @@ class CharacterSimulator:
 
     def _generate_social_media_post(self, platform: str, prompt_prefix: str = ""):
         if model:
-            prompt = f"{prompt_prefix} Generate a social media post for {self.name} on {platform} based on their personality and interests. "
+            prompt = f"{prompt_prefix} Generate a social media post for {self.name} on {platform} based on their personality, current mood, stress level, energy level, and social battery. "
             if platform == "Instagram":
                 prompt += "Include a short caption and suggest a visual description."
             elif platform == "Twitter":
@@ -140,7 +165,7 @@ class CharacterSimulator:
 
     def _generate_whatsapp_message(self, recipient_name: str, prompt_prefix: str = ""):
         if model:
-            prompt = f"{prompt_prefix} Simulate a WhatsApp message from {self.name} to {recipient_name} based on their personalities and relationship."
+            prompt = f"{prompt_prefix} Simulate a WhatsApp message from {self.name} to {recipient_name} based on their personalities, current mood, stress level, energy level, social battery and relationship."
             return generate_gemini_content(prompt)
         else:
             return f"{self.name}: [Simulated message to {recipient_name}]"
@@ -153,7 +178,7 @@ class CharacterSimulator:
         for _ in range(num_comments):
             commenter = self._get_random_supporting_character()
             if commenter:
-                comment_prompt = f"Generate a short comment from {commenter['name']} on a post by {self.name}."
+                comment_prompt = f"Generate a short comment from {commenter['name']} on a post by {self.name} based on their personalities, current mood, stress level, energy level, and social battery."
                 comment_text = generate_gemini_content(comment_prompt) if model else "Nice post!"
                 comments.append({"author": commenter['name'], "text": comment_text})
 
@@ -183,7 +208,7 @@ class CharacterSimulator:
         })
 
         
-        response_prompt = f"Simulate a WhatsApp response from {recipient['name']} to {self.name}'s message: '{message_to_recipient}'."
+        response_prompt = f"Simulate a WhatsApp response from {recipient['name']} to {self.name}'s message: '{message_to_recipient}' based on their personalities, current mood, stress level, energy level, and social battery."
         response_message = generate_gemini_content(response_prompt) if model else "Okay."
         self.whatsapp_history.append({
             "timestamp": datetime.now().isoformat(),
@@ -198,8 +223,31 @@ class CharacterSimulator:
     def simulate_daily_routine(self):
         hour = datetime.now().hour
         event = None
+        
+        #Try to load the random events
+        random_events_data = load_json(RANDOM_EVENTS_FILE)
+        if isinstance(random_events_data, dict) and "events" in random_events_data:
+          events = random_events_data["events"]
+          if random.random() < 0.2:
+                chosen_event = random.choices(events, weights=[event["probability"] for event in events])[0]
+                
+                
+                prompt = f"Simulate a daily event where {self.name} is {chosen_event['name']}. Include details of the event, such as the location, the involved people from the list: {', '.join([char['name'] for char in self.supporting_characters.values()])}, and what happened. Limit to 3 sentences."
+                event_details = generate_gemini_content(prompt)
+                involved_chars = [char for char in self.supporting_characters.values() if char["name"] in event_details]
+                if "log" not in random_events_data:
+                  random_events_data["log"] = []
+                random_events_data["log"].append({
+                    "timestamp": datetime.now().isoformat(),
+                    "name": chosen_event["name"],
+                    "details": event_details,
+                    "involved_characters": [char["name"] for char in involved_chars],
+                })
+                save_json(RANDOM_EVENTS_FILE, random_events_data)
+                return chosen_event['name']
+        
         if 6 <= hour < 10:
-            event = f"{self.name} is having {self.dna.get('Interests and Hobbies', {}).get('Favourite foods', 'breakfast')}."
+          event = f"{self.name} is having {self.dna.get('Interests and Hobbies', {}).get('Favourite foods', 'breakfast')}."
         elif 10 <= hour < 18:
             event = f"{self.name} is at work as an {self.dna.get('Basic Information', {}).get('Career path', 'employee')}."
         elif 18 <= hour < 22:
@@ -209,13 +257,28 @@ class CharacterSimulator:
             event = f"{self.name} is likely sleeping."
 
         if event:
-            self.random_events.append({"timestamp": datetime.now().isoformat(), "event": event})
-            save_json(RANDOM_EVENTS_FILE, self.random_events)
+            if not isinstance(random_events_data, dict):
+                random_events_data = {"log": []}
+            elif "log" not in random_events_data:
+                random_events_data["log"] = []
+            random_events_data["log"].append({"timestamp": datetime.now().isoformat(), "event": event})
+            save_json(RANDOM_EVENTS_FILE, random_events_data)
             return event
         return None
+    
+    def update_character_state(self):
+      
+      mood_choices = ["Happy", "Tired", "Hungry", "Stressed","Relaxed", "Neutral", f"Diseased: {random.choice(['Flu', 'Cold', 'Fever'])}"]
+      self.dna["current_mood"]= random.choice(mood_choices)
+      self.dna["energy_level"]= max(1,min(10,self.dna.get("energy_level", 5)+ random.randint(-1,1)))
+      self.dna["social_battery"]= max(1,min(10,self.dna.get("social_battery", 5)+ random.randint(-1,1)))
+      self.dna["stress_level"]= max(1,min(10,self.dna.get("stress_level", 5)+ random.randint(-1,1)))
+      save_character_dna(DNA_FILE,self.dna)
+      
 
     def run_daily_updates(self):
         
+        self.update_character_state()
         if random.random() < 0.3:
             self.simulate_instagram_post()
         if random.random() < 0.2:
@@ -257,7 +320,7 @@ if st.sidebar.checkbox("Enable Edit DNA"):
         if st.sidebar.button("Save DNA Changes"):
             try:
                 updated_dna = json.loads(updated_dna_json)
-                save_dna(DNA_FILE, updated_dna)
+                save_character_dna(DNA_FILE, updated_dna)
                 simulator.dna = updated_dna
                 st.success("DNA updated successfully. Please refresh the app.")
             except json.JSONDecodeError as e:
@@ -269,9 +332,10 @@ if st.sidebar.checkbox("Enable Edit DNA"):
         new_char_name = st.text_input("Character Name")
         if new_char_name:
             if st.sidebar.button(f"Create {new_char_name}"):
-                default_char = {"name": new_char_name, "personality": "Friendly", "interests": []}
+                default_char = {"name": new_char_name, "personality": "Friendly", "interests": [],"current_mood": "Neutral",
+                                  "energy_level": 5, "social_battery": 5, "stress_level": 5}
                 filepath = os.path.join(SUPPORTING_CHARS_DIR, f"{new_char_name.lower().replace(' ', '_')}.json")
-                save_json(filepath, default_char)
+                save_character_dna(filepath, default_char)
                 simulator.supporting_characters = load_supporting_characters()
                 st.success(f"Supporting character '{new_char_name}' created.")
                 st.experimental_rerun()
@@ -307,19 +371,20 @@ elif platform == "WhatsApp":
 
 elif platform == "Daily Events":
     st.subheader("Daily Events")
-    for event in reversed(simulator.random_events):
-        st.write(f"{event['timestamp']} - {event['event']}")
-        st.markdown("---")
+    events_data = load_json(RANDOM_EVENTS_FILE)
+    if isinstance(events_data, dict) and "log" in events_data:
+        for event in reversed(events_data["log"]):
+           st.write(f"{event.get('timestamp','No Timestamp')} - {event.get('name', event.get('event','No Name'))}")
+           if 'details' in event:
+            st.write(f"Details: {event['details']}")
+           if 'involved_characters' in event:
+            st.write(f"Involved Characters: {', '.join(event['involved_characters'])}")
+           st.markdown("---")
 
 
 def daily_scheduled_tasks():
     simulator.run_daily_updates()
     
-    
-    
-    
-    
-
 schedule.every().day.at("08:00").do(daily_scheduled_tasks) 
 
 def run_scheduler():
@@ -327,9 +392,6 @@ def run_scheduler():
         schedule.run_pending()
         time.sleep(60)  
 
-
-
-import threading
 scheduler_thread = threading.Thread(target=run_scheduler, daemon=True)
 scheduler_thread.start()
 
