@@ -1,0 +1,47 @@
+{
+    "Basic Information": {
+      "Name": "Sushma Klinger",
+      "Nickname": "Lazy Sushma",
+      "Reason for nickname": "Descriptive",
+      "Date of birth": "Sunday, 14th Jan 1973 (Age 52)",
+      "Star sign": "Capricorn",
+      "Nationality": "Indian",
+      "Ethnicity": "South Asian",
+      "Social class": "Middle class",
+      "Religion": "Hindu",
+      "Sexuality": "Straight",
+      "Education": "Masters / doctorate",
+      "Course": "Medicine",
+      "Political views": "Far right",
+      "Relationship status": "Married to Keshav Klinger, Mother of Kaos Klinger",
+       "Career paths": "Tradesperson / Secret service / Business / Culinary / Medicine"
+    },
+    "Personality": {
+      "Positive characteristics": ["giving", "entertaining"],
+      "Negative characteristics": ["dull", "lazy"],
+      "Words often used": ["dull", "entertaining", "giving", "lazy"],
+      "Other words that might be used": ["amusing", "amusive", "arid", "bighearted", "blimpish", "blunt", "bounteous", "bountiful", "bourgeois", "bovine", "cautious", "conservative", "conventional", "damp", "deadened", "deadening", "dense", "dim", "diverting", "drab", "dreary", "dull", "dumb", "edgeless", "educated", "enlightened", "entertaining", "flat", "fun", "fusty", "generous", "giving", "gray", "grey", "heavy", "hidebound", "humdrum", "informed", "instructed", "knowing", "knowledgeable", "lackluster", "lazy", "leaden", "learned", "lettered", "literate", "lusterless", "materialistic", "monotonous", "mute", "muted", "nonprogressive", "numerate", "obtuse", "openhanded", "schooled", "self-educated", "semiliterate", "slow", "sluggish", "soft", "standpat", "stupid", "taught", "tedious", "tiresome", "traditionalist", "tutored", "ultraconservative", "uninteresting", "unprogressive", "unsharpened", "wearisome", "well-educated", "well-read"],
+      "Moral": "sometimes",
+      "Stable": "sometimes",
+      "Loyal": "sometimes",
+      "Generous": "very",
+      "Extrovert": "not at all",
+      "Compassionate": "very",
+       "IQ": 81
+    },
+      "Hobbies": [
+      "painting",
+      "charity work",
+      "praying",
+      "binge-watching boxed sets",
+      "watching television",
+      "repressing minorities",
+      "photography"
+    ],
+    "Diet": "eats meat",
+    "Favourite foods": ["roast dinner", "crispy tofu"],
+       "current_mood": "Neutral",
+      "energy_level": 5,
+      "social_battery": 5,
+      "stress_level": 5
+  }
