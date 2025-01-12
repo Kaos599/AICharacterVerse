@@ -71,7 +71,7 @@ RANDOM_EVENTS_FILE = os.path.join(DATA_DIR, "random_events.json")
 SUPPORTING_CHARS_DIR = os.path.join(DATA_DIR, "supporting_characters")
 os.makedirs(SUPPORTING_CHARS_DIR, exist_ok=True)
 
-# Modified load function to handle both json and jsonl
+
 def load_character_dna(filepath: str) -> Dict[str, Any]:
     """Loads character's DNA from a JSON or JSONL file."""
     if os.path.exists(filepath):
@@ -117,7 +117,7 @@ def load_supporting_characters() -> Dict[str, Dict[str, Any]]:
     for filename in os.listdir(SUPPORTING_CHARS_DIR):
         if filename.endswith(".json"):
             filepath = os.path.join(SUPPORTING_CHARS_DIR, filename)
-            char_data = load_character_dna(filepath)  # Updated to use our load function
+            char_data = load_character_dna(filepath)  
             if char_data:
                characters[char_data['name']] = char_data
     return characters
@@ -138,7 +138,7 @@ def generate_gemini_content(prompt: str) -> str:
 
 class CharacterSimulator:
     def __init__(self):
-        self.dna = load_character_dna(DNA_FILE)  # Updated load function here
+        self.dna = load_character_dna(DNA_FILE)  
         self.instagram_history = load_json(INSTAGRAM_HISTORY_FILE)
         self.twitter_history = load_json(TWITTER_HISTORY_FILE)
         self.whatsapp_history = load_json(WHATSAPP_HISTORY_FILE)
@@ -224,7 +224,7 @@ class CharacterSimulator:
         hour = datetime.now().hour
         event = None
         
-        #Try to load the random events
+        
         random_events_data = load_json(RANDOM_EVENTS_FILE)
         if isinstance(random_events_data, dict) and "events" in random_events_data:
           events = random_events_data["events"]
