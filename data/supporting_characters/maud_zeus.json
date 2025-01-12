@@ -1,0 +1,49 @@
+{
+    "Basic Information": {
+      "Name": "Maud Zeus",
+      "Nickname": "Average Maud",
+      "Reason for nickname": "Descriptive",
+      "Date of birth": "Friday, 6th Jan 2006 (Age 19)",
+      "Star sign": "Capricorn",
+      "Nationality": "American",
+      "Ethnicity": "Caucasian",
+      "Social class": "Upper class",
+      "Religion": "Agnostic",
+      "Sexuality": "Straight",
+        "Education": "High school",
+      "Political views": "Centre",
+      "Relationship status": "Bestfriend of Kaos",
+      "Career path": "Politics"
+    },
+    "Personality": {
+      "Positive characteristics": ["inspiring", "loveable"],
+      "Negative characteristics": ["disloyal", "sadistic"],
+      "Words often used": ["disloyal", "inspiring", "loveable", "sadistic"],
+      "Other words that might be used": ["disloyal", "encouraging", "exciting", "exhilarating", "faithless", "inspirational", "inspiring", "insurgent", "loveable", "moving", "mutinous", "rebellious", "recreant", "sadistic", "seditious", "subversive", "teenage", "traitorous", "treasonable", "treasonous", "un-american", "unfaithful", "unpatriotic"],
+      "Moral": "sometimes",
+      "Stable": "sometimes",
+      "Loyal": "not at all",
+      "Generous": "sometimes",
+      "Extrovert": "sometimes",
+       "Compassionate": "sometimes",
+       "IQ": 102
+    },
+       "Hobbies": [
+        "relaxing",
+        "duck herding",
+        "hockey",
+        "meditation",
+         "planking",
+          "eating out",
+          "horse riding",
+        "cycling"
+       ],
+      "Phobias": ["sausages"],
+      "Obsessions": ["colouring in"],
+    "Diet": "eats meat",
+    "Favourite foods": ["oranges", "suet pudding"],
+     "current_mood": "Neutral",
+      "energy_level": 5,
+      "social_battery": 5,
+      "stress_level": 5
+  }
