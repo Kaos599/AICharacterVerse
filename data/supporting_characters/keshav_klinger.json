@@ -1,0 +1,46 @@
+{
+    "Basic Information": {
+      "Name": "Keshav Klinger",
+      "Nickname": "Tall Keshav",
+      "Reason for nickname": "Descriptive",
+      "Date of birth": "Thursday, 15th Jan 1970 (Age 55)",
+      "Star sign": "Capricorn",
+      "Nationality": "Indian",
+       "Ethnicity": "South Asian",
+      "Social class": "Middle class",
+      "Religion": "Agnostic",
+      "Sexuality": "Straight",
+      "Education": "Bachelor's degree",
+      "Course": "Chemistry",
+      "Political views": "Centre",
+       "Relationship status": "Married to Sushma Klinger, Father of Kaos Klinger",
+       "Career paths": "Science / Secret service"
+    },
+    "Personality": {
+      "Positive characteristics": ["considerate", "stable"],
+      "Negative characteristics": ["standoffish", "greedy"],
+      "Words often used": ["considerate", "greedy", "stable", "standoffish"],
+      "Other words that might be used": ["balanced", "considerate", "eager", "educated", "enlightened", "firm", "greedy", "hungry", "impatient", "informed", "instructed", "intelligent", "knowing", "knowledgeable", "lasting", "learned", "lettered", "literate", "numerate", "rapacious", "schooled", "self-educated", "semiliterate", "smart", "sound", "stabilized", "stable", "standoffish", "static", "steady", "taught", "thoughtful", "tutored", "unchangeable", "unchanging", "unfluctuating", "unreactive", "well-educated", "well-read"],
+      "Moral": "sometimes",
+      "Stable": "sometimes",
+      "Loyal": "sometimes",
+      "Generous": "sometimes",
+      "Extrovert": "not at all",
+       "Compassionate": "sometimes",
+      "IQ": 116
+    },
+      "Hobbies": [
+      "golf",
+      "Rubix cube",
+      "theatre",
+      "cookery",
+      "jigsaw puzzles",
+      "donating blood"
+    ],
+    "Diet": "eats meat",
+    "Favourite foods": ["roast dinner", "soup"],
+      "current_mood": "Neutral",
+      "energy_level": 5,
+      "social_battery": 5,
+      "stress_level": 5
+  }
