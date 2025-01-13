@@ -27,20 +27,20 @@ class CharacterSimulator:
         """Refreshes the list of available supporting character names."""
         self.supporting_characters = load_supporting_characters(SUPPORTING_CHARS_DIR)
         self.relationships = load_json(RELATIONSHIP_FILE)
-        self._available_characters = list(self.relationships.keys()) 
+        self._available_characters = list(self.relationships.keys()) # Just the names
 
     def _get_random_supporting_character(self):
         if not self._available_characters:
             print("WARNING: No available supporting characters. Returning None.")
             return None
 
-        char_name = random.choice(self._available_characters) 
+        char_name = random.choice(self._available_characters) # Pick a name
         char_data = self.supporting_characters.get(char_name)
-        if not char_data:  
+        if not char_data:  # Handle missing character data
             print(f"WARNING: Data not found for {char_name}. Returning None")
             return None
 
-        return char_data  
+        return char_data  # Return the character data directly
 
 
     def _get_character_context(self, character_dna):
@@ -132,7 +132,7 @@ class CharacterSimulator:
 
             if last_comment['author'] != self.name and self.name not in commenters:
                 potential_responders.append(self.name)
-
+            
             if not potential_responders:
                 break # no one left to comment
 
@@ -145,7 +145,7 @@ class CharacterSimulator:
               responder_name = random.choice(potential_responders)
             else:
               break
-
+            
             responder_data = self.supporting_characters.get(responder_name)
             commenter_data = self.supporting_characters.get(last_comment['author'])
 
@@ -155,19 +155,19 @@ class CharacterSimulator:
 
                     if self._should_interact(responder_name, last_comment['author'], relationship_strength):
                         response_prompt = f"""
-                    You are {responder_name}, responding to this comment: "{last_comment['text']}" by {last_comment['author']} on the post: "{post['content']}".
+                    You are {responder_name}, responding to this comment: "{last_comment['text']}" by {last_comment['author']} on the post: "{post['content']}"
 
                     Your relationship with {last_comment['author']} is {relationship_strength}/100.
                     Your current mood is {responder_data.get('current_mood', 'Neutral')}.
 
                     Generate a natural, short response that reflects your personality,
                     mood, and relationship with the commenter.
-                    Respond **only** with a JSON object containing a single key: "comment". The value of "comment" should be the text of your response. Keep it under 2 sentences.
+                    Keep it under 2 sentences.
                     """
                         response_text = generate_gemini_content(response_prompt)
 
                         thread.append({
-                            'author': responder_name,
+                            'author': responder_name,  # Corrected: Use responder_name
                             'text': response_text,
                             'timestamp': datetime.now().isoformat(),
                             'parent_id': last_comment.get('id'),
@@ -214,7 +214,7 @@ class CharacterSimulator:
                     if commenter_data:
                         print(f"DEBUG: Commenter data found for {commenter_name}")  # Added
                         relationship_strength = self.relationships.get(commenter_name, {}).get("interaction_frequency", 0.5) * 100
-                        should_interact = self._should_interact(commenter_name, self.name, relationship_strength) # Corrected line
+                        should_interact = self._should_interact(commenter_name, self.name, relationship_strength)
                         print(f"DEBUG: Should {commenter_name} interact? {should_interact}")  # Added
                         if should_interact:
                             comment_prompt = f"""
@@ -224,22 +224,17 @@ class CharacterSimulator:
 
                             Generate a natural comment for this Instagram post:
                             {post_data['content']}
-                            Respond **only** with a JSON object containing a single key: "comment". The value of "comment" should be the text of your comment.
                             """
 
-                            json_comment = generate_gemini_content(comment_prompt)
-                            if json_comment:
-                                initial_comment = {
-                                    'author': commenter_name,
-                                    'text': json_comment,
-                                    'timestamp': timestamp,
-                                    'id': str(uuid.uuid4())
-                                }
+                            initial_comment = {
+                                'author': commenter_name,
+                                'text': generate_gemini_content(comment_prompt),
+                                'timestamp': timestamp,
+                                'id': str(uuid.uuid4())
+                            }
 
-                                thread = self._generate_comment_thread(post, initial_comment)
-                                post['comments'].extend(thread)
-                            else:
-                                print(f"DEBUG: Failed to generate JSON comment from {commenter_name}")
+                            thread = self._generate_comment_thread(post, initial_comment)
+                            post['comments'].extend(thread)
                         else:
                             print(f"DEBUG: {commenter_name} did not interact.")  # Added
                     else:
@@ -291,52 +286,7 @@ class CharacterSimulator:
     def simulate_twitter_post(self):
         post_data = self._generate_social_media_post("Twitter")
         post_content = post_data.get('content', "Error generating tweet")
-        timestamp = datetime.now().isoformat()
-
-        post = {
-            "timestamp": timestamp,
-            "author": self.name,
-            "content": post_content,
-            "replies": [],
-            "likes": random.randint(10, 50),
-            'id': str(uuid.uuid4())  
-        }
-
-        print(f"DEBUG: Starting Twitter post simulation. Available characters: {self._available_characters}")
-        self._refresh_available_characters()
-        num_initial_replies = random.randint(1, 3)
-
-        if self._available_characters:
-            print(f"DEBUG: Available characters for Twitter replies: {self._available_characters}")
-            for _ in range(num_initial_replies):
-                replier_name = random.choice(self._available_characters)
-                print(f"DEBUG: Attempting reply from: {replier_name}")
-                replier_data = self.supporting_characters.get(replier_name)
-
-                if replier_data:
-                    print(f"DEBUG: Replier data found for {replier_name}")
-                    relationship_strength = self.relationships.get(replier_name, {}).get("interaction_frequency", 0.5) * 100
-                    should_interact = self._should_interact(replier_name, self.name, relationship_strength)
-                    print(f"DEBUG: Should {replier_name} reply? {should_interact}")
-                    if should_interact:
-                        reply_prompt = f"""
-                        You are {replier_name}.
-                        The following is a tweet by {self.name}: "{post_content}"
-                        Generate a short, natural reply to this tweet (under 280 characters).
-                        """
-                        initial_reply = {
-                            'author': replier_name,
-                            'text': generate_gemini_content(reply_prompt),
-                            'timestamp': timestamp,
-                            'id': str(uuid.uuid4()),
-                            'parent_id': post['id']
-                        }
-                        post['replies'].append(initial_reply) 
-                    else:
-                        print(f"DEBUG: {replier_name} did not reply.")
-                else:
-                    print(f"DEBUG: Replier data NOT found for {replier_name}")
-
+        post = {"timestamp": datetime.now().isoformat(), "content": post_content}
         self.twitter_history.append(post)
         save_json(TWITTER_HISTORY_FILE, self.twitter_history)
         return post

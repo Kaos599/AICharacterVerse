@@ -1,0 +1,18 @@
+{
+    "Sushma Klinger": {
+      "relationship_type": "Parent",
+      "interaction_frequency": 0.8,
+      "description": "Sushma is Kaos's mom and a nurturing figure. They share a strong bond."
+    },
+    "Keshav Klinger": {
+      "relationship_type": "Parent",
+      "interaction_frequency": 0.6,
+      "description": "Keshav is Kaos's dad, and they occasionally discuss science and puzzles."
+    },
+    "Maud Zeus": {
+      "relationship_type": "Best Friend",
+      "interaction_frequency": 1.0,
+      "description": "Maud is Kaos's closest confidante. They talk daily and share jokes."
+    }
+  }
+  

@@ -11,7 +11,7 @@ import threading
 try:
     import google.generativeai as genai
     
-    genai.configure(api_key=os.environ.get("AIzaSyBEWgDXRyFMHJpXG9bHZZFyDDKDYVEWY2k"))
+    genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
     generation_config = {
         "temperature": 0.7,
         "top_p": 0.95,

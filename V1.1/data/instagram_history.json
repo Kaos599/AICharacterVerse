@@ -1,69 +1,71 @@
 [
     {
-        "timestamp": "2025-01-13T19:38:00.676074",
+        "timestamp": "2025-01-13T19:53:49.818510",
         "author": "Kaos Klinger",
-        "content": "Caption: Behold! My latest chaotic creation in the realm of tree shaping. I think it\u2019s rather eccentric, don't you? \ud83c\udf33\ud83d\ude1c\n\nVisual Description: A photo of a tree that has been shaped into a bizarre, almost comical form. Branches twist in unexpected directions, forming loops and spirals. Some leaves have been pruned into strange shapes. Kaos Klinger is standing beside it, looking amused with a slightly sarcastic grin.",
+        "content": "Caption: Behold! My latest chaotic, yet undeniably creative, tree shaping endeavor! It's less 'bonsai' and more 'bonsai-gone-wild,' wouldn't you say? \ud83d\ude1c\n\nVisual Description: A slightly blurry photo of a tree that has been aggressively pruned and shaped into an abstract, almost comical form. Some branches are bent at odd angles, others are twisted into spirals. The person taking the photo seems to be standing back, looking at the tree with an amused expression, their face partially visible.",
         "likes": 134,
         "comments": [
             {
-                "author": "Maud Zeus",
-                "text": "",
-                "timestamp": "2025-01-13T19:38:00.676074",
-                "id": "8916a3e0-cc35-4f79-a50e-5e782c909172"
+                "author": "Keshav Klinger",
+                "text": "Okay, here's a comment from Keshav Klinger, considering his personality and current state:\n\n**Comment:**\n\n\"Woah, that's... certainly something! Definitely living up to the 'chaotic' part, haha. You've got a real vision there, I'll give you that. Is it supposed to be a dragon? Or maybe a really confused octopus?\"",
+                "timestamp": "2025-01-13T19:59:07.259064",
+                "id": "ec5177bd-9369-4383-b47b-d7d7a08ad533"
             },
             {
                 "author": "Maud Zeus",
-                "text": "",
-                "timestamp": "2025-01-13T19:38:00.676074",
-                "id": "d9345ad8-81a4-45be-ba23-0d66b24540b9"
+                "text": "```json\n{\n  \"comment\": \"A confused octopus, you say? I like the way you think, Keshav! Maybe I'll add some tentacles next time.\"\n}\n```",
+                "timestamp": "2025-01-13T19:59:11.167248",
+                "parent_id": "ec5177bd-9369-4383-b47b-d7d7a08ad533",
+                "id": "910bd7f1-4859-4e22-8b0b-7e42113df6ce"
             },
             {
                 "author": "Sushma Klinger",
-                "text": "Okay, here's a comment from Sushma Klinger, based on her personality:\n\n**Comment:**\n\n\"Kaos, darling, you've outdone yourself! That tree looks like it's auditioning for a Tim Burton film. I can't decide if it's genius or just plain mad, but I'm leaning towards genius, naturally. You always were a bit...eccentric. \ud83d\ude09\"",
-                "timestamp": "2025-01-13T19:46:38.329074",
-                "id": "a842a3e2-7799-48ac-9382-80ef5115129d"
-            },
-            {
-                "author": "Sushma Klinger",
-                "text": "Okay, here's a comment from Sushma Klinger, considering her personality and the post:\n\n**Comment:**\n\n\"Oh, Kaos, darling, you've truly outdone yourself this time! It's... certainly something. I'm not sure if 'eccentric' quite covers it, perhaps 'fantastically bizarre' is more fitting? \ud83d\ude02 Just promise me you won't try to make the begonias do that next.\"",
-                "timestamp": "2025-01-13T19:46:51.512278",
-                "id": "88111958-31c3-47ca-aaf9-dfadde566f12"
-            },
-            {
-                "author": "Maud Zeus",
-                "text": "Maud Zeus: \"Well, that's certainly... something, Kaos. I'll give you points for originality, if nothing else. Though, I'm not entirely sure what it's supposed to be. A chaotic octopus tree? \ud83d\ude02\"",
-                "timestamp": "2025-01-13T19:47:03.011317",
-                "id": "c5716a79-e82a-4ca5-b728-6104d31c9482"
+                "text": "Okay, here's a comment from Sushma Klinger, considering her personality and current state:\n\n**Sushma's Comment:**\n\n\"Oh my, that's... certainly something! \ud83d\ude02 I can see the 'chaotic' part for sure. It's like the tree decided to have a midlife crisis and go full abstract art. I'm not sure if I should be impressed or worried. Did you use a chainsaw for this, or were you just really, really enthusiastic with the shears? \ud83d\ude05\"",
+                "timestamp": "2025-01-13T19:59:16.228591",
+                "id": "7b5ff742-472f-4550-a927-4ec9e4f7bc6a"
             }
         ],
-        "last_update": "2025-01-13T19:47:12.856933"
+        "last_update": "2025-01-13T19:59:16.228591"
     },
     {
-        "timestamp": "2025-01-13T19:46:33.210770",
+        "timestamp": "2025-01-13T19:53:53.212881",
         "author": "Kaos Klinger",
-        "content": "Caption: My latest bit of 'creative' tree shaping. It's... certainly something. Chaotic, you might say. \n\nVisual Description: A photograph of a tree that has been drastically shaped into a bizarre, almost comical form. Branches are bent in unnatural directions, some are woven together, and there are small, oddly-placed platforms attached to the trunk. The overall effect is whimsical and slightly absurd. The background is a somewhat overgrown garden.",
-        "likes": 82,
+        "content": "Caption: This chaotic jigsaw is a true test of my creative problem-solving skills. Or maybe I'll just watch a YouTube video instead... decisions, decisions.\n\nVisual Description: A slightly blurry photo of a partially completed jigsaw puzzle on a wooden table. The pieces are a mix of colors and shapes, scattered somewhat haphazardly. A hand, presumably the poster's, is visible in the corner, holding a single puzzle piece. The overall lighting is slightly dim.",
+        "likes": 149,
         "comments": [
             {
-                "author": "Keshav Klinger",
-                "text": "Okay, here's a comment from Keshav Klinger, considering his traits:\n\n**Keshav's Traits:**\n\n*   **Basic Information:**  A somewhat eccentric botanist.\n*   **Personality:**\n    *   **Positive:** Curious, enthusiastic, creative.\n    *   **Negative:** Can be a bit chaotic, prone to overthinking, sometimes a bit blunt.\n    *   **Words often used:** \"fascinating,\" \"intriguing,\" \"quite,\" \"remarkable,\" \"utterly,\" \"I must say\".\n    *   **Other words that might be used:** \"specimen,\" \"arboreal,\" \"horticultural,\" \"botanical,\" \"dendrology\".\n    *   **Moral:** 7/10\n    *   **Stable:** 6/10\n    *   **Loyal:** 8/10\n    *   **Generous:** 7/10\n    *  **Extrovert**: 5/10\n    *   **Compassionate:** 7/10\n    *   **IQ:** 130\n*   **Current Mood:** Neutral\n*   **Energy Level:** 7/10\n*   **Social Battery:** 6/10\n*   **Stress Level:** 3/10\n*   **Interests and Hobbies:** Botany, gardening, experimental horticulture, unusual plant forms, reading about plant lore.\n*   **Bad habits:** Gets easily distracted, tends to over-complicate things.\n*   **Phobias:** Entomophobia (fear of insects, especially beetles).\n*   **Diet:** Vegetarian\n*   **Favourite foods:** Anything with mushrooms, lentil soups, exotic fruits.\n\n**Keshav's Comment:**\n\n\"Well, I must say, that's quite...intriguing. The arboreal manipulation is certainly, um, *bold*. Fascinating approach to branch architecture. I'm curious about the horticultural methodology you employed. Do tell!\"",
-                "timestamp": "2025-01-13T19:47:03.011317",
-                "id": "0cf5a299-06df-451b-81f3-ddc5af5024d8"
+                "author": "Maud Zeus",
+                "text": "Okay, here's a comment from Maud Zeus, considering her personality and current state:\n\n**Maud Zeus's Comment:**\n\n\"Oh, jigsaws... the ultimate test of patience! I usually end up just staring at the box like it holds all the answers. \ud83d\ude05 Good luck, you'll need it!\"",
+                "timestamp": "2025-01-13T19:53:58.329088",
+                "id": "862c17e7-801b-407e-9cb7-3ea9fd0c0c1c"
             },
             {
                 "author": "Keshav Klinger",
-                "text": "Okay, here's a comment from Keshav, considering his personality and current state:\n\n**Comment:**\n\n\"Well, that's... certainly *a* way to treat a tree. Looks like it's been through the wringer, haha. I'm not sure if it's art or a cry for help, but I'm intrigued! Bet it was a lot of work, though. You got some kind of plan for it?\"\n\n**Explanation of why this fits Keshav:**\n\n*   **Personality:** Keshav is generally positive and curious, even when faced with something odd. He's not overly critical right away, even if it's not his style. He uses phrases like \"certainly *a* way\" and is interested in the process (\"Bet it was a lot of work\"). He's also a bit cheeky with the \"cry for help\" comment, but not mean-spirited.\n*   **Current Mood:** He is in a neutral mood, which leads to a fairly standard comment.\n*   **Energy Level:** He has high energy, so he is very engaged.\n*   **Social Battery**: He has a high social battery, making him more likely to engage in conversation.\n*   **Stress Level**: Low stress means he is very relaxed.\n*   **Interests:** He is interested in creative things and gardening, which is why he is immediately intrigued.",
-                "timestamp": "2025-01-13T19:47:12.856933",
-                "id": "f58d66c3-e2a7-460a-8259-33966fbeda18"
+                "text": "```json\n{\n  \"comment\": \"Haha, yeah, the box is definitely more intimidating than helpful sometimes. Maybe we should team up on a jigsaw sometime, Maud.\"\n}\n```",
+                "timestamp": "2025-01-13T19:54:00.384406",
+                "parent_id": "862c17e7-801b-407e-9cb7-3ea9fd0c0c1c",
+                "id": "ded9a8bc-bd53-487d-b7f5-6dc36b9b7ec9"
+            },
+            {
+                "author": "Keshav Klinger",
+                "text": "Okay, here's a comment from Keshav Klinger, considering his traits and the post:\n\n**Comment:**\n\n\"Haha, that's a mood! I swear, sometimes those puzzles are designed to make you question your entire existence. You got this...or, yeah, YouTube is a solid backup plan. Maybe try sorting by color first? It's my go-to strategy when I'm not just staring blankly at a pile of cardboard.\"",
+                "timestamp": "2025-01-13T19:58:43.074830",
+                "id": "04f24b3a-38a4-472b-8f55-42580dcb40e1"
+            },
+            {
+                "author": "Keshav Klinger",
+                "text": "Okay, here's a comment from Keshav, taking into account his personality and current state:\n\n**Comment:**\n\n\"Haha, been there! The struggle is real. Sometimes the best solution is a good ol' YouTube tutorial, ngl. But hey, at least you're trying, that's what really matters, right? \ud83d\ude09\"",
+                "timestamp": "2025-01-13T19:59:00.111257",
+                "id": "31532ed8-1756-45f1-81dc-03ba301d8581"
             },
             {
                 "author": "Maud Zeus",
-                "text": "Haha, \"cry for help\" - you're not wrong, Keshav! And yes, there's *always* a plan, even if it's a chaotic one.",
-                "timestamp": "2025-01-13T19:47:16.901197",
-                "parent_id": "f58d66c3-e2a7-460a-8259-33966fbeda18",
-                "id": "edf89ee9-41b7-4ffd-a463-e39e5177b34c"
+                "text": "```json\n{\n  \"comment\": \"Haha, true! YouTube tutorials are a lifesaver sometimes. Glad you appreciate the effort, Keshav!\"\n}\n```",
+                "timestamp": "2025-01-13T19:59:02.205055",
+                "parent_id": "31532ed8-1756-45f1-81dc-03ba301d8581",
+                "id": "2d3b11f9-0250-455f-bad9-74e42fcd2be7"
             }
         ],
-        "last_update": "2025-01-13T19:47:12.856933"
+        "last_update": "2025-01-13T19:59:16.228591"
     }
 ]

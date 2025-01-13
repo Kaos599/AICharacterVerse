@@ -142,22 +142,12 @@ if platform == "Instagram":
                 st.write("**Comments**")
                 if 'comments' in post:
                     for comment in post.get('comments', []):
-                        comment_text = comment['text']
-                        # Attempt to parse as JSON if it looks like a JSON string
-                        if comment_text.strip().startswith('{') and comment_text.strip().endswith('}'):
-                            try:
-                                json_comment = json.loads(comment_text)
-                                comment_text = json_comment.get('comment', 'Error parsing comment')
-                            except json.JSONDecodeError:
-                                print(f"Error parsing comment JSON: {comment_text}")
-                                comment_text = "Error parsing comment"  # Fallback text
-
                         st.markdown(f"""
                         <div class='comment-container'>
-                            <strong>{comment['author']}</strong>: {comment_text}
+                            <strong>{comment['author']}</strong>: {comment['text']}
                         </div>
                         """, unsafe_allow_html=True)
-                        
+
                 # Add comment form
                 with st.form(key=f"comment_form_{post['timestamp']}"):
                     new_comment = st.text_input("Add a comment...", key=f"comment_input_{post['timestamp']}")
@@ -194,27 +184,10 @@ if platform == "Instagram":
 elif platform == "Twitter":
     st.subheader("Twitter")
     for tweet in reversed(simulator.twitter_history):
-        with st.container():
-            author = tweet.get('author', 'Unknown Author')  # Get author, default to 'Unknown Author'
-            if 'timestamp' in tweet:
-                timestamp_obj = datetime.fromisoformat(tweet['timestamp'])
-                st.write(f"**{author}** - {format_datetime(timestamp_obj)}")
-            else:
-                st.write(f"**{author}** - No Timestamp") # Handle missing timestamp as well
-            st.write(tweet.get('content', 'No content')) # Use .get for content too
-            st.write(f"❤️ {tweet.get('likes', 0)} Likes")
-
-            # Display Replies
-            if 'replies' in tweet and tweet['replies']:
-                st.write("**Replies**")
-                for reply in tweet['replies']:
-                    with st.container():
-                        st.markdown(f"""
-                        <div style='margin-left: 20px; padding: 8px; margin-top: 4px; background-color: #f0f2f5; border-radius: 8px; color: black;'>
-                            <strong>{reply.get('author', 'Unknown')}</strong>: {reply['text']}
-                        </div>
-                        """, unsafe_allow_html=True)
-            st.markdown("---")
+        timestamp_obj = datetime.fromisoformat(tweet['timestamp'])
+        st.write(f"**{simulator.name}** - {format_datetime(timestamp_obj)}")
+        st.write(tweet['content'])
+        st.markdown("---")
 
 elif platform == "WhatsApp":
     st.subheader("WhatsApp")
