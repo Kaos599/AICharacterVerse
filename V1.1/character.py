@@ -153,62 +153,98 @@ class CharacterSimulator:
             current_depth += 1
         
         return thread    
+        
     def simulate_instagram_post(self):
-        """Simulates creating an Instagram post with interactions from supporting characters."""
+        """Simulates creating an Instagram post with interactive comment threads."""
         post_data = self._generate_social_media_post("Instagram")
         timestamp = datetime.now().isoformat()
         
-        
-        likes = random.randint(50, 200)
-        
-        
-        comments = []
-        num_comments = random.randint(2, 5)  
-        
-        used_characters = set()  
-        
-        for _ in range(num_comments):
-            
-            available_characters = [char for char in self.supporting_characters 
-                                if char['name'] not in used_characters]
-            
-            if not available_characters:
-                break
-                
-            
-            commenter = random.choice(available_characters)
-            used_characters.add(commenter['name'])
-            
-            
-            comment_prompt = f"""
-            You are {commenter['name']}, with the following traits:
-            Personality: {commenter['personality']}
-            Current mood: {commenter.get('current_mood', 'Neutral')}
-            
-            Generate a realistic, short comment (1-2 sentences) for this Instagram post:
-            {post_data['content']}
-            
-            The comment should reflect your personality and current mood.
-            """
-            
-            comment_text = generate_gemini_content(comment_prompt)
-            
-            comments.append({
-                'author': commenter['name'],
-                'text': comment_text,
-                'timestamp': timestamp
-            })
         
         post = {
             'timestamp': timestamp,
             'author': self.name,
             'content': post_data['content'],
-            'likes': likes,
-            'comments': comments,
-            'gemini_data': post_data.get('gemini_data', {})
+            'likes': random.randint(50, 200),
+            'comments': [],
+            'last_update': timestamp
         }
         
+        
+        num_initial_comments = random.randint(2, 4)
+        
+        for _ in range(num_initial_comments):
+            commenter = random.choice(self.supporting_characters)
+            
+            if self._should_interact(commenter, self.dna, 
+                                self.relationships.get(f"{commenter['name']}_{self.name}", 50)):
+                
+                comment_prompt = f"""
+                You are {commenter['name']}, with these traits:
+                Personality: {commenter['personality']}
+                Current mood: {commenter.get('current_mood', 'Neutral')}
+                
+                Generate a natural comment for this Instagram post:
+                {post_data['content']}
+                """
+                
+                initial_comment = {
+                    'author': commenter['name'],
+                    'text': generate_gemini_content(comment_prompt),
+                    'timestamp': timestamp,
+                    'id': str(uuid.uuid4())
+                }
+                
+                
+                thread = self._generate_comment_thread(post, initial_comment)
+                post['comments'].extend(thread)
+        
         self.instagram_history.append(post)
+        self._save_instagram_history()
+
+    def update_post_interactions(self):
+        """Updates post interactions periodically."""
+        current_time = datetime.now()
+        
+        for post in self.instagram_history:
+            
+            last_update = datetime.fromisoformat(post['last_update'])
+            if (current_time - last_update).total_seconds() < 5:
+                continue
+                
+            
+            if random.random() < 0.3:  
+                commenter = random.choice(self.supporting_characters)
+                
+                if self._should_interact(commenter, 
+                                    {'name': post['author']}, 
+                                    self.relationships.get(f"{commenter['name']}_{post['author']}", 50)):
+                    
+                    comment_prompt = f"""
+                    You are {commenter['name']}, discovering this post:
+                    {post['content']}
+                    
+                    Generate a natural, initial comment.
+                    """
+                    
+                    initial_comment = {
+                        'author': commenter['name'],
+                        'text': generate_gemini_content(comment_prompt),
+                        'timestamp': current_time.isoformat(),
+                        'id': str(uuid.uuid4())
+                    }
+                    
+                    thread = self._generate_comment_thread(post, initial_comment)
+                    post['comments'].extend(thread)
+            
+            
+            for comment in post['comments']:
+                if 'parent_id' not in comment:  
+                    if random.random() < 0.2:  
+                        thread = self._generate_comment_thread(post, comment)
+                        post['comments'].extend(thread[1:])  
+            
+            post['last_update'] = current_time.isoformat()
+        
         self._save_instagram_history()
 
     def simulate_twitter_post(self):

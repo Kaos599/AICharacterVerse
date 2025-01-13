@@ -1,4 +1,4 @@
-# streamlit_app.py
+
 import streamlit as st
 import json
 import os
@@ -73,13 +73,17 @@ platform = st.selectbox("Select Platform", ["Instagram", "Twitter", "WhatsApp", 
 
 if platform == "Instagram":
     st.subheader("Instagram")
+    
+    
+    auto_update = st.sidebar.checkbox("Enable Live Updates", value=True)
+    
     for post in reversed(simulator.instagram_history):
         with st.container():
-            # Create a clean card-like container
+            
             st.markdown("""
             <style>
             .instagram-post {
-                border: 1px solid #dbdbdb;
+                border: 1px solid 
                 border-radius: 8px;
                 padding: 12px;
                 margin-bottom: 20px;
@@ -88,24 +92,23 @@ if platform == "Instagram":
             </style>
             """, unsafe_allow_html=True)
             
+            
             with st.container():
-                # Header
+                
                 col1, col2 = st.columns([1, 5])
                 with col1:
-                    st.image("https://placekitten.com/50/50", width=50)  # Profile picture placeholder
+                    st.image("https://placekitten.com/50/50", width=50)
                 with col2:
                     timestamp_obj = datetime.fromisoformat(post['timestamp'])
                     st.write(f"**{post.get('author', simulator.name)}**")
                     st.write(f"*{format_datetime(timestamp_obj)}*")
                 
-                # # Image placeholder
-                # st.image("https://placekitten.com/600/400", use_column_width=True)
                 
-                # Extract caption and visual description from content
+                st.image("https://placekitten.com/600/400", use_column_width=True)
+                
+                
                 if 'content' in post:
                     content = post['content']
-                    
-                    # Split content into caption and visual description
                     caption_start = content.lower().find('caption:')
                     visual_start = content.lower().find('visual description:')
                     
@@ -117,7 +120,7 @@ if platform == "Instagram":
                         with st.expander("View Visual Description"):
                             st.write(visual_desc)
                 
-                # Interactions
+                
                 col1, col2 = st.columns([1, 4])
                 with col1:
                     st.write(f"❤️ {post['likes']} Likes")
@@ -127,31 +130,56 @@ if platform == "Instagram":
                         simulator._save_instagram_history()
                         st.experimental_rerun()
                 
-                # Comments
-                st.write("**Comments**")
-                for comment in post.get('comments', []):
-                    st.markdown(f"""
-                    <div style='padding: 8px; margin: 4px 0; background-color: #f0f2f5; border-radius: 8px;'>
-                        <strong>{comment['author']}</strong>: {comment['text']}
-                    </div>
-                    """, unsafe_allow_html=True)
                 
-                # Add comment
+                st.write("**Comments**")
+                if 'comments' in post:
+                    for comment in post.get('comments', []):
+                        with st.container():
+                            
+                            indent = 0
+                            if 'parent_id' in comment:
+                                indent = 20  
+                            
+                            st.markdown(f"""
+                            <div style='margin-left: {indent}px; padding: 8px; 
+                                      margin-top: 4px; background-color: 
+                                      border-radius: 8px;'>
+                                <strong>{comment['author']}</strong>: {comment['text']}
+                            </div>
+                            """, unsafe_allow_html=True)
+                
+                
                 with st.form(key=f"comment_form_{timestamp_obj}"):
                     new_comment = st.text_input("Add a comment...", key=f"comment_input_{timestamp_obj}")
                     if st.form_submit_button("Post Comment"):
                         if new_comment:
                             if 'comments' not in post:
                                 post['comments'] = []
-                            post['comments'].append({
-                                'author': random.choice([char['name'] for char in simulator.supporting_characters]),
+                            
+                            
+                            comment = {
+                                'author': simulator.name,
                                 'text': new_comment,
-                                'timestamp': datetime.now().isoformat()
-                            })
+                                'timestamp': datetime.now().isoformat(),
+                                'id': str(uuid.uuid4())
+                            }
+                            
+                            
+                            last_comment = post['comments'][-1] if post['comments'] else None
+                            if last_comment:
+                                comment['parent_id'] = last_comment.get('id')
+                            
+                            post['comments'].append(comment)
                             simulator._save_instagram_history()
                             st.experimental_rerun()
                 
                 st.markdown("---")
+    
+    
+    if auto_update:
+        simulator.update_post_interactions()
+        time.sleep(5)
+        st.experimental_rerun()
 
 elif platform == "Twitter":
     st.subheader("Twitter")
@@ -190,6 +218,33 @@ def daily_scheduled_tasks():
     simulator.run_daily_updates()
 
 schedule.every().day.at("08:00").do(daily_scheduled_tasks)
+
+
+
+def display_comment_thread(comments, parent_id=None, depth=0):
+        """Recursively displays threaded comments."""
+        for comment in comments:
+            if comment.get('parent_id') == parent_id:
+                st.markdown(f"""
+                <div style='margin-left: {depth * 20}px; padding: 8px; 
+                            margin-top: 4px; background-color: 
+                            border-radius: 8px;'>
+                    <strong>{comment['author']}</strong>: {comment['text']}
+                </div>
+                """, unsafe_allow_html=True)
+                
+                display_comment_thread(comments, comment['id'], depth + 1)
+
+    
+    if 'comments' in post:
+        st.write("**Comments**")
+        display_comment_thread(post['comments'])
+
+    
+    if st.sidebar.checkbox("Enable Live Updates", value=True):
+        simulator.update_post_interactions()
+        time.sleep(5)  
+        st.experimental_rerun()
 
 def run_scheduler():
     while True:
