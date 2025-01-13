@@ -300,35 +300,34 @@ class CharacterSimulator:
 
         save_json(WHATSAPP_HISTORY_FILE, self.whatsapp_history)
         return self.whatsapp_history[-2:]
-        
+
     def simulate_daily_routine(self):
         hour = datetime.now().hour
         event = None
-        
+
         #Try to load the random events
         random_events_data = load_json(RANDOM_EVENTS_FILE)
         if isinstance(random_events_data, dict) and "events" in random_events_data:
-          events = random_events_data["events"]
-          if random.random() < 0.2:
+            events = random_events_data["events"]
+            if random.random() < 0.2:
                 chosen_event = random.choices(events, weights=[event["probability"] for event in events])[0]
-                
-                
+
                 prompt = f"Simulate a daily event where {self.name} is {chosen_event['name']}. Include details of the event, such as the location, the involved people from the list: {', '.join([char['name'] for char in self.supporting_characters.values()])}, and what happened. Limit to 3 sentences."
                 event_details = generate_gemini_content(prompt)
                 involved_chars = [char for char in self.supporting_characters.values() if char["name"] in event_details]
                 if "log" not in random_events_data:
-                  random_events_data["log"] = []
+                    random_events_data["log"] = []
                 random_events_data["log"].append({
-                    "timestamp": datetime.now(),
+                    "timestamp": datetime.now().isoformat(),
                     "name": chosen_event["name"],
                     "details": event_details,
                     "involved_characters": [char["name"] for char in involved_chars],
                 })
                 save_json(RANDOM_EVENTS_FILE, random_events_data)
                 return chosen_event['name']
-        
+
         if 6 <= hour < 10:
-          event = f"{self.name} is having {self.dna.get('Interests and Hobbies', {}).get('Favourite foods', 'breakfast')}."
+            event = f"{self.name} is having {self.dna.get('Interests and Hobbies', {}).get('Favourite foods', 'breakfast')}."
         elif 10 <= hour < 18:
             event = f"{self.name} is at work as an {self.dna.get('Basic Information', {}).get('Career path', 'employee')}."
         elif 18 <= hour < 22:
@@ -342,7 +341,7 @@ class CharacterSimulator:
                 random_events_data = {"log": []}
             elif "log" not in random_events_data:
                 random_events_data["log"] = []
-            random_events_data["log"].append({"timestamp": datetime.now(), "event": event})
+            random_events_data["log"].append({"timestamp": datetime.now().isoformat(), "event": event})
             save_json(RANDOM_EVENTS_FILE, random_events_data)
             return event
         return None
@@ -427,7 +426,6 @@ platform = st.selectbox("Select Platform", ["Instagram", "Twitter", "WhatsApp", 
 if platform == "Instagram":
     st.subheader("Instagram")
     for post in reversed(simulator.instagram_history):
-        # Convert timestamp string to datetime object
         timestamp_obj = datetime.fromisoformat(post['timestamp'])
         st.write(f"**{simulator.name}** - {format_datetime(timestamp_obj)}")
         if 'description' in post:
