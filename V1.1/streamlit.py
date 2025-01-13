@@ -22,23 +22,23 @@ simulator = st.session_state['simulator']
 st.sidebar.title("Character Actions")
 if st.sidebar.button("Simulate Instagram Post"):
     simulator.simulate_instagram_post()
-    st.experimental_rerun()
+    st.rerun() #Add this
 
 if st.sidebar.button("Simulate Twitter Post"):
     simulator.simulate_twitter_post()
-    st.experimental_rerun()
+    st.rerun()
 
 if st.sidebar.button("Simulate WhatsApp Chat"):
     simulator.simulate_whatsapp_chat()
-    st.experimental_rerun()
+    st.rerun()
 
 if st.sidebar.button("Simulate Daily Routine Event"):
     simulator.simulate_daily_routine()
-    st.experimental_rerun()
+    st.rerun()
 
 if st.sidebar.button("Simulate Supporting Character Post"):
     simulator.simulate_supporting_character_post()
-    st.experimental_rerun()
+    st.rerun()
 
 st.sidebar.title("Admin Mode")
 if st.sidebar.checkbox("Enable Edit DNA"):
@@ -66,7 +66,7 @@ if st.sidebar.checkbox("Enable Edit DNA"):
                 save_character_dna(filepath, default_char)
                 simulator.supporting_characters = load_supporting_characters(SUPPORTING_CHARS_DIR)
                 st.success(f"Supporting character '{new_char_name}' created.")
-                st.experimental_rerun()
+                st.rerun()
 
 st.header("Social Media Feed")
 platform = st.selectbox("Select Platform", ["Instagram", "Twitter", "WhatsApp", "Daily Events"])
@@ -128,7 +128,7 @@ if platform == "Instagram":
                     if st.button("Like 👍", key=f"like_{post['timestamp']}"):
                         post['likes'] += 1
                         simulator._save_instagram_history()
-                        st.experimental_rerun()
+                        st.rerun()
 
                 # Comments section
                 st.write("**Comments**")
@@ -171,7 +171,7 @@ if platform == "Instagram":
 
                             post['comments'].append(comment)
                             simulator._save_instagram_history()
-                            st.experimental_rerun()
+                            st.rerun()
 
                 st.markdown("---")
 
@@ -179,7 +179,7 @@ if platform == "Instagram":
     if auto_update:
         simulator.update_post_interactions()
         time.sleep(5)
-        st.experimental_rerun()
+        st.rerun()
 
 elif platform == "Twitter":
     st.subheader("Twitter")

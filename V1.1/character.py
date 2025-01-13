@@ -109,23 +109,42 @@ class CharacterSimulator:
         return random.random() < interaction_chance
 
     def _generate_comment_thread(self, post, initial_comment, max_depth=3):
-        """Generates a thread of comments based on character interactions."""
         thread = [initial_comment]
         current_depth = 0
 
+        commenters = set()  # Keep track of who has commented
+
         while current_depth < max_depth:
             last_comment = thread[-1]
+            commenters.add(last_comment['author'])  # Add the last commenter
 
+            potential_responders = [
+                char_name for char_name in self._available_characters
+                if char_name != last_comment['author'] and char_name not in commenters
+            ]
+
+            if last_comment['author'] != self.name and self.name not in commenters:
+                potential_responders.append(self.name)
+            
+            if not potential_responders:
+                break # no one left to comment
+
+            # Prioritize best friend if available
+            best_friend_name = next((name for name, rel in self.relationships.items() if rel.get("relationship_type") == "Best Friend"), None)
+            if best_friend_name and best_friend_name in potential_responders and best_friend_name not in commenters:
+                responder_name = best_friend_name
+                potential_responders.remove(responder_name) # remove from list so they dont comment twice by random chance as well
+            elif potential_responders:
+              responder_name = random.choice(potential_responders)
+            else:
+              break
+            
+            responder_data = self.supporting_characters.get(responder_name)
             commenter_data = self.supporting_characters.get(last_comment['author'])
 
-            potential_responders = [char_name for char_name in self._available_characters if char_name != last_comment['author']]
-            if last_comment['author'] != self.name:
-                potential_responders.append(self.name)
-
-            for responder_name in potential_responders:
-                responder_data = self.supporting_characters.get(responder_name)
-                if responder_data and commenter_data:
-                    relationship_strength = self.relationships.get(responder_name, {}).get("interaction_frequency", 0.5) * 100
+            if responder_data and commenter_data:
+                relationship_strength = self.relationships.get(responder_name, {}).get("interaction_frequency", 0.5) * 100
+                if self._should_interact(responder_name, last_comment['author'], relationship_strength):
 
                     if self._should_interact(responder_name, last_comment['author'], relationship_strength):
                         response_prompt = f"""
