@@ -130,7 +130,15 @@ def generate_gemini_content(prompt: str) -> str:
         try:
             full_prompt = f"{prompt}"
             response = model.generate_content(full_prompt)
-            return response.text
+            
+            # Strip any prefix, instructions, plans or any other stuff except the actual text.
+            lines = response.text.split('\n')
+            actual_text = ""
+            for line in lines:
+               if line.strip() and not line.strip().lower().startswith("plan:"):
+                  actual_text += line.strip() + " " 
+            
+            return actual_text.strip()
         except Exception as e:
             print(f"Error generating content with Gemini: {e}")
             return ""
