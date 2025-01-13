@@ -3,6 +3,24 @@ import json
 import os
 from typing import Dict, Any, List
 
+
+def load_character_dna(filepath: str) -> Dict[str, Any]:
+    """Loads character's DNA from a JSON or JSONL file."""
+    if os.path.exists(filepath):
+        try:
+           if filepath.endswith(".jsonl"):
+                with open(filepath, 'r') as f:
+                  for line in f:
+                     return json.loads(line)
+           else:
+              with open(filepath, 'r') as f:
+                  return json.load(f)
+        except json.JSONDecodeError:
+            print(f"Error decoding JSON from {filepath}. Ensure it's valid JSON/JSONL.")
+            return {}
+    return {}
+
+    
 def load_supporting_characters(directory: str) -> Dict[str, Dict[str, Any]]:
     """Loads all supporting characters from JSON files in the specified directory."""
     characters = {}

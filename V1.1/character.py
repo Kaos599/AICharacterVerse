@@ -1,7 +1,7 @@
 import random
 from datetime import datetime
 from typing import Dict, Any, List
-from data_handler import load_character_dna, save_character_dna, load_json, save_json, load_supporting_characters,backfill_last_update
+from data_handler import load_character_dna, save_character_dna, load_json, save_json, load_supporting_characters, backfill_last_update
 from gemini_integration import generate_gemini_content
 from config import DNA_FILE, INSTAGRAM_HISTORY_FILE, TWITTER_HISTORY_FILE, WHATSAPP_HISTORY_FILE, RANDOM_EVENTS_FILE, SUPPORTING_CHARS_DIR, RELATIONSHIP_FILE
 import uuid
