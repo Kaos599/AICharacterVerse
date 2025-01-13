@@ -131,12 +131,22 @@ def generate_gemini_content(prompt: str) -> str:
             full_prompt = f"{prompt}"
             response = model.generate_content(full_prompt)
             
-            # Strip any prefix, instructions, plans or any other stuff except the actual text.
+            # Attempt to extract the actual text by splitting and removing potential prefixes.
             lines = response.text.split('\n')
             actual_text = ""
+            start_found = False
+
             for line in lines:
-               if line.strip() and not line.strip().lower().startswith("plan:"):
-                  actual_text += line.strip() + " " 
+               line = line.strip()
+               if line.lower().startswith("caption:"):
+                 start_found=True
+                 actual_text += line[len("caption:"):].strip() + " "
+               elif line.lower().startswith("tweet:"):
+                  start_found = True
+                  actual_text += line[len("tweet:"):].strip() + " "
+               elif start_found:
+                  actual_text += line + " "
+
             
             return actual_text.strip()
         except Exception as e:
@@ -144,6 +154,10 @@ def generate_gemini_content(prompt: str) -> str:
             return ""
     else:
         return "Gemini API not available."
+
+def format_datetime(dt: datetime) -> str:
+    """Formats a datetime object into a readable string."""
+    return dt.strftime("%dth %b %Y %I:%M%p").replace("AM", "am").replace("PM","pm")
 
 class CharacterSimulator:
     def __init__(self):
@@ -195,13 +209,13 @@ class CharacterSimulator:
 
             description = generate_gemini_content(prompt_describe)
             
-            prompt_content = f"{prompt_prefix} {character_context} Based on the post description : '{description}', generate a short caption for the post. Include a suggestion for a visual description (if not using real images) as well. Limit to 25 words"
+            prompt_content = f"{prompt_prefix} {character_context} Based on the post description : '{description}', generate a short caption for the post. Include a suggestion for a visual description (if not using real images). The response should start with 'Caption:' and should be followed by the caption. And should be followed by 'Visual Description:' and then the visual description."
             content = generate_gemini_content(prompt_content)
             return {"description": description, "content": content}
 
 
         elif platform == "Twitter":
-            prompt_content = f"{prompt_prefix} {character_context} Generate a short, opinionated Tweet (no more than 280 characters). "
+            prompt_content = f"{prompt_prefix} {character_context} Generate a short, opinionated Tweet (no more than 280 characters). The response should start with 'Tweet:' followed by the tweet content."
             content = generate_gemini_content(prompt_content)
             return {"content": content}
 
@@ -236,7 +250,7 @@ class CharacterSimulator:
             comment_text = generate_gemini_content(prompt) if model else "Nice post!"
             comments.append({"author": commenter['name'], "text": comment_text})
             
-        post = {"timestamp": datetime.now().isoformat(),"content": post_content, "likes": likes, "comments": comments}
+        post = {"timestamp": datetime.now(), "description": post_description ,"content": post_content, "likes": likes, "comments": comments}
         self.instagram_history.append(post)
         save_json(INSTAGRAM_HISTORY_FILE, self.instagram_history)
         return post
@@ -244,7 +258,7 @@ class CharacterSimulator:
     def simulate_twitter_post(self):
         post_data = self._generate_social_media_post("Twitter")
         post_content = post_data.get('content', "Error generating tweet")
-        post = {"timestamp": datetime.now().isoformat(), "content": post_content}
+        post = {"timestamp": datetime.now(), "content": post_content}
         self.twitter_history.append(post)
         save_json(TWITTER_HISTORY_FILE, self.twitter_history)
         return post
@@ -256,7 +270,7 @@ class CharacterSimulator:
 
         message_to_recipient = self._generate_whatsapp_message(recipient)
         self.whatsapp_history.append({
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(),
             "sender": self.name,
             "recipient": recipient['name'],
             "message": message_to_recipient
@@ -268,7 +282,7 @@ class CharacterSimulator:
         prompt = f"You are simulating a whatsapp message response. {sender_context} The main character message was '{message_to_recipient}'. {reciever_context} Simulate a short Whatsapp message from {recipient['name']} to {self.name} in response to the above message."
         response_message = generate_gemini_content(prompt) if model else "Okay."
         self.whatsapp_history.append({
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(),
             "sender": recipient['name'],
             "recipient": self.name,
             "message": response_message
@@ -295,7 +309,7 @@ class CharacterSimulator:
                 if "log" not in random_events_data:
                   random_events_data["log"] = []
                 random_events_data["log"].append({
-                    "timestamp": datetime.now().isoformat(),
+                    "timestamp": datetime.now(),
                     "name": chosen_event["name"],
                     "details": event_details,
                     "involved_characters": [char["name"] for char in involved_chars],
@@ -318,7 +332,7 @@ class CharacterSimulator:
                 random_events_data = {"log": []}
             elif "log" not in random_events_data:
                 random_events_data["log"] = []
-            random_events_data["log"].append({"timestamp": datetime.now().isoformat(), "event": event})
+            random_events_data["log"].append({"timestamp": datetime.now(), "event": event})
             save_json(RANDOM_EVENTS_FILE, random_events_data)
             return event
         return None
@@ -403,7 +417,7 @@ platform = st.selectbox("Select Platform", ["Instagram", "Twitter", "WhatsApp", 
 if platform == "Instagram":
     st.subheader("Instagram")
     for post in reversed(simulator.instagram_history):
-        st.write(f"**{simulator.name}** - {post['timestamp']}")
+        st.write(f"**{simulator.name}** - {format_datetime(post['timestamp'])}")
         if 'description' in post:
             st.write(f"Description: {post['description']}") # Only display if it exists
         st.write(post['content'])
@@ -417,7 +431,7 @@ if platform == "Instagram":
 elif platform == "Twitter":
     st.subheader("Twitter")
     for tweet in reversed(simulator.twitter_history):
-        st.write(f"**{simulator.name}** - {tweet['timestamp']}")
+        st.write(f"**{simulator.name}** - {format_datetime(tweet['timestamp'])}")
         st.write(tweet['content'])
         st.markdown("---")
 
@@ -426,14 +440,14 @@ elif platform == "WhatsApp":
     for message in simulator.whatsapp_history:
         sender = message['sender']
         text = message['message']
-        st.write(f"**{sender}**: {text}  *({message['timestamp']})*")
+        st.write(f"**{sender}**: {text}  *({format_datetime(message['timestamp'])} )*")
 
 elif platform == "Daily Events":
     st.subheader("Daily Events")
     events_data = load_json(RANDOM_EVENTS_FILE)
     if isinstance(events_data, dict) and "log" in events_data:
         for event in reversed(events_data["log"]):
-           st.write(f"{event.get('timestamp','No Timestamp')} - {event.get('name', event.get('event','No Name'))}")
+           st.write(f"{format_datetime(event.get('timestamp',''))} - {event.get('name', event.get('event','No Name'))}")
            if 'details' in event:
             st.write(f"Details: {event['details']}")
            if 'involved_characters' in event:
