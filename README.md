@@ -37,7 +37,7 @@ Follow these instructions to run the AI character simulator on your local machin
 
 4. **Install dependencies:** Install the required Python libraries using pip.
    ```bash
-   pip install -r requirements.txt
+   pip install google-generativeai streamlit python-dotenv schedule
    ```
 
 5. **Set up your Gemini API Key**
