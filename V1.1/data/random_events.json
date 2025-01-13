@@ -1,6 +1,8 @@
-[
-    {
-        "timestamp": "2025-01-11T21:30:35.516617",
-        "event": "AI Character is spending the evening relaxing."
-    }
-]
+{
+    "log": [
+        {
+            "timestamp": "2025-01-13T18:05:03.267628",
+            "event": "Kaos Klinger is spending the evening relaxing."
+        }
+    ]
+}

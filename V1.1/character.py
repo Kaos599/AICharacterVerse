@@ -22,33 +22,25 @@ class CharacterSimulator:
         self.relationships = load_json(RELATIONSHIP_FILE)
         self._available_characters = []
         self._refresh_available_characters()
-
+        
     def _refresh_available_characters(self):
-        """Refreshes the list of available supporting characters with weights."""
+        """Refreshes the list of available supporting character names."""
         self.supporting_characters = load_supporting_characters(SUPPORTING_CHARS_DIR)
         self.relationships = load_json(RELATIONSHIP_FILE)
-        self._available_characters = []
-
-        for char_name, char_data in self.supporting_characters.items():
-            weight = self.relationships.get(char_name, {}).get("interaction_frequency", 0.1)  
-            if weight > 0:  
-                self._available_characters.append({
-                    "name": char_name,
-                    "data": char_data,
-                    "weight": weight
-                })
-
-        if not self._available_characters:
-            print("DEBUG: No available characters found after refresh. Check relationships.json or supporting characters.")
-        print(f"DEBUG: Relationships loaded: {self.relationships}")
-        print(f"DEBUG: Available characters after refresh: {self._available_characters}")
+        self._available_characters = list(self.relationships.keys()) # Just the names
 
     def _get_random_supporting_character(self):
         if not self._available_characters:
-            print("DEBUG: _available_characters is empty. Returning None.")
+            print("WARNING: No available supporting characters. Returning None.")
             return None
-        weights = [char["weight"] for char in self._available_characters]
-        return random.choices([char["data"] for char in self._available_characters], weights=weights, k=1)[0]
+
+        char_name = random.choice(self._available_characters) # Pick a name
+        char_data = self.supporting_characters.get(char_name)
+        if not char_data:  # Handle missing character data
+            print(f"WARNING: Data not found for {char_name}. Returning None")
+            return None
+
+        return char_data  # Return the character data directly
 
 
     def _get_character_context(self, character_dna):
@@ -100,8 +92,12 @@ class CharacterSimulator:
         message = generate_gemini_content(prompt)
         return message
 
-    def _should_interact(self, char1_data, char2_data, relationship_strength):
+    def _should_interact(self, char1_name, char2_name, relationship_strength):
         """Determines if two characters should interact based on mood and relationship."""
+
+        char1_data = self.supporting_characters.get(char1_name)
+        char2_data = self.supporting_characters.get(char2_name)
+
 
         base_chance = relationship_strength / 100
 
@@ -130,26 +126,25 @@ class CharacterSimulator:
         while current_depth < max_depth:
             last_comment = thread[-1]
 
-            commenter_data = next((char["data"] for char in self._available_characters
-                                if char["name"] == last_comment['author']), self.dna)
+            commenter_data = self.supporting_characters.get(last_comment['author'])
 
-            potential_responders = [char for char in self._available_characters
-                                if char['name'] != last_comment['author']]
+            potential_responders = [char_name for char_name in self._available_characters if char_name != last_comment['author']]
             if last_comment['author'] != self.name:
-                potential_responders.append({'name': self.name, 'data': self.dna})
+                potential_responders.append(self.name)
 
-            for responder in potential_responders:
-                relationship_strength = self.relationships.get(
-                    f"{responder['name']}_{last_comment['author']}", 50)
 
-                if self._should_interact(responder['data'], commenter_data, relationship_strength):
+            for responder_name in potential_responders:  # Iterate by name
+                responder_data = self.supporting_characters.get(responder_name)  # Get data here
+                if responder_data:
+                    relationship_strength = self.relationships.get(responder_name, {}).get("interaction_frequency", 0.5) * 100 # Access relationship data here.
 
+                if responder_data and self._should_interact(responder_data, commenter_data, relationship_strength):
+                        # Construct response_prompt based on name now
                     response_prompt = f"""
-                    You are {responder['name']}, responding to this comment: "{last_comment['text']}"
-                    by {last_comment['author']} on the post: "{post['content']}"
+                    You are {responder_name}, responding to this comment: "{last_comment['text']}" by {last_comment['author']} on the post: "{post['content']}"
 
                     Your relationship with {last_comment['author']} is {relationship_strength}/100.
-                    Your current mood is {responder['data'].get('current_mood', 'Neutral')}.
+                    Your current mood is {responder_data.get('current_mood', 'Neutral')}.
 
                     Generate a natural, short response that reflects your personality,
                     mood, and relationship with the commenter.
@@ -195,11 +190,10 @@ class CharacterSimulator:
         if self._available_characters:
             print(f"Available characters before generating comments: {self._available_characters}")
             for _ in range(num_initial_comments):
-                if self._available_characters:
-                    commenter = random.choice(self._available_characters)
+                    commenter_name = random.choice(self._available_characters)
+                    commenter_data = self.supporting_characters.get(commenter_name)
 
-                    if self._should_interact(commenter["data"], self.dna,
-                                    self.relationships.get(f"{commenter['name']}_{self.name}", 50)):
+                    if commenter_data and self._should_interact(commenter_data, self.dna, self.relationships.get(commenter_name, {}).get("interaction_frequency", 0.5)):
 
                         comment_prompt = f"""
                         You are {commenter['name']}, with these traits:
@@ -237,8 +231,11 @@ class CharacterSimulator:
 
             self._refresh_available_characters()  
 
-            if random.random() < 0.9 and self._available_characters:
-                commenter = random.choice(self._available_characters)
+            commenter_name = random.choice(self._available_characters)
+            commenter_data = self.supporting_characters.get(commenter_name)
+
+            if self._should_interact(commenter_name, self.name,
+                                    self.relationships.get(commenter_name, {}).get("interaction_frequency", 0.5) * 100):
 
                 if self._should_interact(commenter['data'], {'name': post['author']},
                                         self.relationships.get(f"{commenter['name']}_{post['author']}", 50)):
@@ -347,9 +344,14 @@ class CharacterSimulator:
         if not self._available_characters:
             return
 
-        poster = random.choice(self._available_characters)
+        poster_name = random.choice(self._available_characters)
+        poster_data = self.supporting_characters.get(poster_name)
 
-        post_prompt = f"""
+        if poster_data:  # Check if poster data exists
+            post_prompt = f"""
+            You are {poster_name}, with the following traits:
+
+        
         You are {poster['name']}, with the following traits:
         Personality: {poster['data']['personality']}
         Current mood: {poster['data'].get('current_mood', 'Neutral')}
