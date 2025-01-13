@@ -89,6 +89,14 @@ if platform == "Instagram":
                 margin-bottom: 20px;
                 background-color: white;
             }
+            .comment-container {
+                margin-left: 20px;
+                padding: 8px;
+                margin-top: 4px;
+                background-color: black;
+                border-radius: 8px;
+                color: #f0f2f5; /* Added this line to set text color */
+            }
             </style>
             """, unsafe_allow_html=True)
 
@@ -128,25 +136,17 @@ if platform == "Instagram":
                     if st.button("Like 👍", key=f"like_{post['timestamp']}"):
                         post['likes'] += 1
                         simulator._save_instagram_history()
-                        st.rerun()
+                        st.experimental_rerun()
 
                 # Comments section
                 st.write("**Comments**")
                 if 'comments' in post:
                     for comment in post.get('comments', []):
-                        with st.container():
-                            # Calculate indentation based on parent_id
-                            indent = 0
-                            if 'parent_id' in comment:
-                                indent = 20  # pixels
-
-                            st.markdown(f"""
-                            <div style='margin-left: {indent}px; padding: 8px;
-                                      margin-top: 4px; background-color: #f0f2f5;
-                                      border-radius: 8px;'>
-                                <strong>{comment['author']}</strong>: {comment['text']}
-                            </div>
-                            """, unsafe_allow_html=True)
+                        st.markdown(f"""
+                        <div class='comment-container'>
+                            <strong>{comment['author']}</strong>: {comment['text']}
+                        </div>
+                        """, unsafe_allow_html=True)
 
                 # Add comment form
                 with st.form(key=f"comment_form_{post['timestamp']}"):
@@ -171,7 +171,7 @@ if platform == "Instagram":
 
                             post['comments'].append(comment)
                             simulator._save_instagram_history()
-                            st.rerun()
+                            st.experimental_rerun()
 
                 st.markdown("---")
 

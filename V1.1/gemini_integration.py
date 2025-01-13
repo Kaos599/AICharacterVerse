@@ -11,7 +11,7 @@ try:
         "top_k": 40,
         "max_output_tokens": 8192,
     }
-    model = genai.GenerativeModel(model_name="gemini-2.0-flash-thinking-exp-1219", generation_config=generation_config, system_instruction=CHARACTER_SYSTEM_INSTRUCTIONS)
+    model = genai.GenerativeModel(model_name="gemini-2.0-flash-exp", generation_config=generation_config, system_instruction=CHARACTER_SYSTEM_INSTRUCTIONS)
 except ImportError:
     print("Warning: google-generativeai library not found. Content generation will be limited.")
     model = None
@@ -25,20 +25,19 @@ def generate_gemini_content(prompt: str) -> str:
 
             if response.text:
                 lines = response.text.split('\n')
-                actual_text = ""
-                extraction_started = False
 
                 if "instagram" in prompt.lower():
                     caption_started = False
                     visual_description_started = False
+                    actual_text = ""
                     for line in lines:
                         line = line.strip()
                         if line.lower().startswith("caption:"):
                             caption_started = True
-                            actual_text += line[len("caption:").strip()]
+                            actual_text += line[len("caption:").strip():]
                         elif line.lower().startswith("visual description:"):
                             visual_description_started = True
-                            actual_text += " " + line[len("visual description:").strip()]
+                            actual_text += " " + line[len("visual description:").strip():]
                         elif caption_started and not visual_description_started:
                             actual_text += line + " "
                         elif visual_description_started:
@@ -49,11 +48,20 @@ def generate_gemini_content(prompt: str) -> str:
                     for line in lines:
                         line = line.strip()
                         if line.lower().startswith("tweet:"):
-                            return line[len("tweet:").strip()]
-                    return response.text.strip() # If no "Tweet:" prefix, return the whole response
+                            return line[len("tweet:").strip():]
+                    return response.text.strip()
+
+                # New logic to extract just the comment
+                elif "generate a natural comment" in prompt.lower() or "respond to this comment" in prompt.lower():
+                    for line in lines:
+                        line = line.strip()
+                        # Return the first line that isn't empty or a plan item
+                        if line and not line.lower().startswith("plan:") and not line.startswith("*"):
+                            return line
+                    return response.text.strip() # Fallback
 
                 else:
-                    return response.text.strip() # For other prompts, return the whole response
+                    return response.text.strip()
             return ""
         except Exception as e:
             print(f"Error generating content with Gemini: {e}")
