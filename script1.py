@@ -125,30 +125,44 @@ def load_supporting_characters() -> Dict[str, Dict[str, Any]]:
 
 
 def generate_gemini_content(prompt: str) -> str:
-    """Generates content using Google's Gemini AI."""
+    """Generates content using Google's Gemini AI and extracts the main content."""
     if model:
         try:
             full_prompt = f"{prompt}"
             response = model.generate_content(full_prompt)
-            
-            # Attempt to extract the actual text by splitting and removing potential prefixes.
-            lines = response.text.split('\n')
-            actual_text = ""
-            start_found = False
 
-            for line in lines:
-               line = line.strip()
-               if line.lower().startswith("caption:"):
-                 start_found=True
-                 actual_text += line[len("caption:"):].strip() + " "
-               elif line.lower().startswith("tweet:"):
-                  start_found = True
-                  actual_text += line[len("tweet:"):].strip() + " "
-               elif start_found:
-                  actual_text += line + " "
+            if response.text:
+                lines = response.text.split('\n')
+                actual_text = ""
+                extraction_started = False
 
-            
-            return actual_text.strip()
+                if "instagram" in prompt.lower():
+                    caption_started = False
+                    visual_description_started = False
+                    for line in lines:
+                        line = line.strip()
+                        if line.lower().startswith("caption:"):
+                            caption_started = True
+                            actual_text += line[len("caption:").strip()]
+                        elif line.lower().startswith("visual description:"):
+                            visual_description_started = True
+                            actual_text += " " + line[len("visual description:").strip()]
+                        elif caption_started and not visual_description_started:
+                            actual_text += line + " "
+                        elif visual_description_started:
+                            actual_text += line + " "
+                    return actual_text.strip()
+
+                elif "twitter" in prompt.lower():
+                    for line in lines:
+                        line = line.strip()
+                        if line.lower().startswith("tweet:"):
+                            return line[len("tweet:").strip()]
+                    return response.text.strip() # If no "Tweet:" prefix, return the whole response
+
+                else:
+                    return response.text.strip() # For other prompts, return the whole response
+            return ""
         except Exception as e:
             print(f"Error generating content with Gemini: {e}")
             return ""
@@ -417,12 +431,14 @@ platform = st.selectbox("Select Platform", ["Instagram", "Twitter", "WhatsApp", 
 if platform == "Instagram":
     st.subheader("Instagram")
     for post in reversed(simulator.instagram_history):
-        st.write(f"**{simulator.name}** - {format_datetime(post['timestamp'])}")
+        # Convert timestamp string to datetime object
+        timestamp_obj = datetime.fromisoformat(post['timestamp'])
+        st.write(f"**{simulator.name}** - {format_datetime(timestamp_obj)}")
         if 'description' in post:
-            st.write(f"Description: {post['description']}") # Only display if it exists
+            st.write(f"Description: {post['description']}")
         st.write(post['content'])
         if "suggested_visual" in post.get('gemini_data', {}):
-            st.image("https://placekitten.com/200/300", caption=post['gemini_data']['suggested_visual']) 
+            st.image("https://placekitten.com/200/300", caption=post['gemini_data']['suggested_visual'])
         st.write(f"❤️ {post['likes']} Likes")
         for comment in post['comments']:
             st.write(f"> **{comment['author']}**: {comment['text']}")
@@ -431,7 +447,9 @@ if platform == "Instagram":
 elif platform == "Twitter":
     st.subheader("Twitter")
     for tweet in reversed(simulator.twitter_history):
-        st.write(f"**{simulator.name}** - {format_datetime(tweet['timestamp'])}")
+        # Convert timestamp string to datetime object
+        timestamp_obj = datetime.fromisoformat(tweet['timestamp'])
+        st.write(f"**{simulator.name}** - {format_datetime(timestamp_obj)}")
         st.write(tweet['content'])
         st.markdown("---")
 
@@ -440,19 +458,27 @@ elif platform == "WhatsApp":
     for message in simulator.whatsapp_history:
         sender = message['sender']
         text = message['message']
-        st.write(f"**{sender}**: {text}  *({format_datetime(message['timestamp'])} )*")
+        # Convert timestamp string to datetime object
+        timestamp_obj = datetime.fromisoformat(message['timestamp'])
+        st.write(f"**{sender}**: {text}  *({format_datetime(timestamp_obj)} )*")
 
 elif platform == "Daily Events":
     st.subheader("Daily Events")
     events_data = load_json(RANDOM_EVENTS_FILE)
     if isinstance(events_data, dict) and "log" in events_data:
         for event in reversed(events_data["log"]):
-           st.write(f"{format_datetime(event.get('timestamp',''))} - {event.get('name', event.get('event','No Name'))}")
-           if 'details' in event:
-            st.write(f"Details: {event['details']}")
-           if 'involved_characters' in event:
-            st.write(f"Involved Characters: {', '.join(event['involved_characters'])}")
-           st.markdown("---")
+            # Convert timestamp string to datetime object (handle potential missing timestamp)
+            timestamp_str = event.get('timestamp')
+            if timestamp_str:
+                timestamp_obj = datetime.fromisoformat(timestamp_str)
+                st.write(f"{format_datetime(timestamp_obj)} - {event.get('name', event.get('event','No Name'))}")
+            else:
+                st.write(f"No Timestamp - {event.get('name', event.get('event','No Name'))}")
+            if 'details' in event:
+                st.write(f"Details: {event['details']}")
+            if 'involved_characters' in event:
+                st.write(f"Involved Characters: {', '.join(event['involved_characters'])}")
+            st.markdown("---")
 
 
 def daily_scheduled_tasks():
