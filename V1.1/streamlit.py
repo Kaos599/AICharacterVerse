@@ -36,6 +36,10 @@ if st.sidebar.button("Simulate Daily Routine Event"):
     simulator.simulate_daily_routine()
     st.experimental_rerun()
 
+if st.sidebar.button("Simulate Supporting Character Post"):
+    simulator.simulate_supporting_character_post()
+    st.experimental_rerun()
+
 st.sidebar.title("Admin Mode")
 if st.sidebar.checkbox("Enable Edit DNA"):
     with st.sidebar.expander("Edit Main Character DNA"):

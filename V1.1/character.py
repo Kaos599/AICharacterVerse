@@ -1,4 +1,4 @@
-# character.py
+
 import random
 from datetime import datetime
 from typing import Dict, Any, List
@@ -74,33 +74,112 @@ class CharacterSimulator:
         message = generate_gemini_content(prompt)
         return message
 
+    def _should_interact(self, char1_data, char2_data, relationship_strength):
+        """Determines if two characters should interact based on mood and relationship."""
+        
+        base_chance = relationship_strength / 100
+        
+        
+        social_modifier = char1_data.get('social_battery', 5) / 10  
+        
+        
+        mood_map = {
+            'Happy': 1.2,
+            'Excited': 1.3,
+            'Content': 1.0,
+            'Neutral': 0.8,
+            'Tired': 0.6,
+            'Irritated': 0.4,
+            'Angry': 0.2
+        }
+        mood_modifier = mood_map.get(char1_data.get('current_mood', 'Neutral'), 0.8)
+        
+        
+        interaction_chance = base_chance * social_modifier * mood_modifier
+        
+        return random.random() < interaction_chance
+
+    def _generate_comment_thread(self, post, initial_comment, max_depth=3):
+        """Generates a thread of comments based on character interactions."""
+        thread = [initial_comment]
+        current_depth = 0
+        
+        while current_depth < max_depth:
+            last_comment = thread[-1]
+            
+            
+            commenter_data = next((char for char in self.supporting_characters 
+                                if char['name'] == last_comment['author']), self.dna)
+            
+            
+            potential_responders = [char for char in self.supporting_characters 
+                                if char['name'] != last_comment['author']]
+            if last_comment['author'] != self.name:
+                potential_responders.append({'name': self.name, 'data': self.dna})
+            
+            
+            for responder in potential_responders:
+                relationship_strength = self.relationships.get(
+                    f"{responder['name']}_{last_comment['author']}", 50)
+                
+                if self._should_interact(responder, commenter_data, relationship_strength):
+                    
+                    response_prompt = f"""
+                    You are {responder['name']}, responding to this comment: "{last_comment['text']}"
+                    by {last_comment['author']} on the post: "{post['content']}"
+                    
+                    Your relationship with {last_comment['author']} is {relationship_strength}/100.
+                    Your current mood is {responder.get('current_mood', 'Neutral')}.
+                    
+                    Generate a natural, short response that reflects your personality,
+                    mood, and relationship with the commenter.
+                    Keep it under 2 sentences.
+                    """
+                    
+                    response_text = generate_gemini_content(response_prompt)
+                    
+                    thread.append({
+                        'author': responder['name'],
+                        'text': response_text,
+                        'timestamp': datetime.now().isoformat(),
+                        'parent_id': last_comment.get('id'),
+                        'id': str(uuid.uuid4())
+                    })
+                    
+                    
+                    if random.random() < 0.7 - (current_depth * 0.2):
+                        break
+                    
+            current_depth += 1
+        
+        return thread    
     def simulate_instagram_post(self):
         """Simulates creating an Instagram post with interactions from supporting characters."""
         post_data = self._generate_social_media_post("Instagram")
         timestamp = datetime.now().isoformat()
         
-        # Generate a random number of likes
+        
         likes = random.randint(50, 200)
         
-        # Generate comments from supporting characters
-        comments = []
-        num_comments = random.randint(2, 5)  # Random number of initial comments
         
-        used_characters = set()  # Track which characters have commented
+        comments = []
+        num_comments = random.randint(2, 5)  
+        
+        used_characters = set()  
         
         for _ in range(num_comments):
-            # Filter out characters who have already commented
+            
             available_characters = [char for char in self.supporting_characters 
                                 if char['name'] not in used_characters]
             
             if not available_characters:
                 break
                 
-            # Select a random character who hasn't commented yet
+            
             commenter = random.choice(available_characters)
             used_characters.add(commenter['name'])
             
-            # Generate comment based on character's personality
+            
             comment_prompt = f"""
             You are {commenter['name']}, with the following traits:
             Personality: {commenter['personality']}
@@ -171,7 +250,7 @@ class CharacterSimulator:
         hour = datetime.now().hour
         event = None
 
-        #Try to load the random events
+        
         random_events_data = load_json(RANDOM_EVENTS_FILE)
         if isinstance(random_events_data, dict) and "events" in random_events_data:
           events = random_events_data["events"]
@@ -211,13 +290,13 @@ class CharacterSimulator:
             save_json(RANDOM_EVENTS_FILE, random_events_data)
             return event
         return None
-        
+
     def simulate_supporting_character_post(self):
         """Simulates a random supporting character creating an Instagram post."""
-        # Randomly select a supporting character to post
+        
         poster = random.choice(self.supporting_characters)
         
-        # Generate post content based on character's personality
+        
         post_prompt = f"""
         You are {poster['name']}, with the following traits:
         Personality: {poster['personality']}
@@ -233,12 +312,12 @@ class CharacterSimulator:
         post_content = generate_gemini_content(post_prompt)
         timestamp = datetime.now().isoformat()
         
-        # Generate initial likes and comments
+        
         likes = random.randint(30, 150)
         comments = []
         
-        # Main character might comment
-        if random.random() < 0.7:  # 70% chance
+        
+        if random.random() < 0.7:  
             comment_prompt = f"""
             You are {self.name}, with your unique personality.
             Generate a short comment (1-2 sentences) for this Instagram post by {poster['name']}:
@@ -261,6 +340,8 @@ class CharacterSimulator:
         
         self.instagram_history.append(post)
         self._save_instagram_history()
+
+    
 
     def update_character_state(self):
 
