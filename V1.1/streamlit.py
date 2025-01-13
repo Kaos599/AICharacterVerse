@@ -1,4 +1,3 @@
-
 import streamlit as st
 import json
 import os
@@ -11,6 +10,7 @@ from character import CharacterSimulator
 from data_handler import load_character_dna, save_character_dna, load_json, load_supporting_characters
 from utils import format_datetime
 from config import DNA_FILE, SUPPORTING_CHARS_DIR, RANDOM_EVENTS_FILE
+import uuid  # Import the uuid library
 
 st.title("AI Character Simulation")
 
@@ -125,7 +125,7 @@ if platform == "Instagram":
                 with col1:
                     st.write(f"❤️ {post['likes']} Likes")
                 with col2:
-                    if st.button("Like 👍", key=f"like_{timestamp_obj}"):
+                    if st.button("Like 👍", key=f"like_{post['timestamp']}"):
                         post['likes'] += 1
                         simulator._save_instagram_history()
                         st.experimental_rerun()
@@ -149,8 +149,8 @@ if platform == "Instagram":
                             """, unsafe_allow_html=True)
                 
                 # Add comment form
-                with st.form(key=f"comment_form_{timestamp_obj}"):
-                    new_comment = st.text_input("Add a comment...", key=f"comment_input_{timestamp_obj}")
+                with st.form(key=f"comment_form_{post['timestamp']}"):
+                    new_comment = st.text_input("Add a comment...", key=f"comment_input_{post['timestamp']}")
                     if st.form_submit_button("Post Comment"):
                         if new_comment:
                             if 'comments' not in post:
@@ -218,22 +218,6 @@ def daily_scheduled_tasks():
     simulator.run_daily_updates()
 
 schedule.every().day.at("08:00").do(daily_scheduled_tasks)
-
-
-
-def display_comment_thread(comments, parent_id=None, depth=0):
-        """Recursively displays threaded comments."""
-        for comment in comments:
-            if comment.get('parent_id') == parent_id:
-                st.markdown(f"""
-                <div style='margin-left: {depth * 20}px; padding: 8px; 
-                            margin-top: 4px; background-color: 
-                            border-radius: 8px;'>
-                    <strong>{comment['author']}</strong>: {comment['text']}
-                </div>
-                """, unsafe_allow_html=True)
-                
-                display_comment_thread(comments, comment['id'], depth + 1)
 
 def run_scheduler():
     while True:

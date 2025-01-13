@@ -19,10 +19,13 @@ class CharacterSimulator:
         self._available_characters = []
         self._refresh_available_characters()
 
-
     def _refresh_available_characters(self):
         """Refreshes the list of available supporting characters with weights."""
+        print("DEBUG: Entering _refresh_available_characters")
         self.supporting_characters = load_supporting_characters(SUPPORTING_CHARS_DIR)
+        print(f"DEBUG: Loaded supporting characters: {self.supporting_characters}")
+        relationships = load_json(RELATIONSHIP_FILE)
+        print(f"DEBUG: Loaded relationships: {relationships}")
         self._available_characters = []
         for char_name, char_data in self.supporting_characters.items():
             weight = self.relationships.get(char_name, {}).get("interaction_frequency", 0.1) if self.relationships else 0.1
@@ -31,6 +34,8 @@ class CharacterSimulator:
                 "data": char_data,
                 "weight": weight
             })
+        print(f"DEBUG: _available_characters after populating: {self._available_characters}")
+        print("DEBUG: Exiting _refresh_available_characters")
 
     def _get_character_context(self, character_dna):
        """Creates a string with character context for the llm prompt"""
@@ -180,6 +185,9 @@ class CharacterSimulator:
         
         num_initial_comments = random.randint(2, 4)
         
+        print(f"DEBUG: Before refreshing in simulate_instagram_post, _available_characters length: {len(self._available_characters)}") # Debugging line
+        self._refresh_available_characters() # Refresh here
+        print(f"DEBUG: After refreshing in simulate_instagram_post, _available_characters length: {len(self._available_characters)}") # Debugging line
         
         if self._available_characters:
             print(f"Available characters before generating comments: {self._available_characters}")  
@@ -224,6 +232,9 @@ class CharacterSimulator:
             if (current_time - last_update).total_seconds() < 5:
                 continue
                 
+            print(f"DEBUG: Before refreshing in update_post_interactions, _available_characters length: {len(self._available_characters)}") # Debugging line
+            self._refresh_available_characters() # Refresh here
+            print(f"DEBUG: After refreshing in update_post_interactions, _available_characters length: {len(self._available_characters)}") # Debugging line
             
             if random.random() < 0.9 and self._available_characters:  
                 
@@ -413,3 +424,6 @@ class CharacterSimulator:
         if random.random() < 0.1:
             self.simulate_whatsapp_chat()
         self.simulate_daily_routine()
+
+    def _save_instagram_history(self):
+        save_json(INSTAGRAM_HISTORY_FILE, self.instagram_history)
