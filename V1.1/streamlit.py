@@ -70,17 +70,84 @@ platform = st.selectbox("Select Platform", ["Instagram", "Twitter", "WhatsApp", 
 if platform == "Instagram":
     st.subheader("Instagram")
     for post in reversed(simulator.instagram_history):
-        timestamp_obj = datetime.fromisoformat(post['timestamp'])
-        st.write(f"**{simulator.name}** - {format_datetime(timestamp_obj)}")
-        if 'description' in post:
-            st.write(f"Description: {post['description']}")
-        st.write(post['content'])
-        if "suggested_visual" in post.get('gemini_data', {}):
-            st.image("https://placekitten.com/200/300", caption=post['gemini_data']['suggested_visual'])
-        st.write(f"❤️ {post['likes']} Likes")
-        for comment in post['comments']:
-            st.write(f"> **{comment['author']}**: {comment['text']}")
-        st.markdown("---")
+        with st.container():
+            # Create a clean card-like container
+            st.markdown("""
+            <style>
+            .instagram-post {
+                border: 1px solid #dbdbdb;
+                border-radius: 8px;
+                padding: 12px;
+                margin-bottom: 20px;
+                background-color: white;
+            }
+            </style>
+            """, unsafe_allow_html=True)
+            
+            with st.container():
+                # Header
+                col1, col2 = st.columns([1, 5])
+                with col1:
+                    st.image("https://placekitten.com/50/50", width=50)  # Profile picture placeholder
+                with col2:
+                    timestamp_obj = datetime.fromisoformat(post['timestamp'])
+                    st.write(f"**{post.get('author', simulator.name)}**")
+                    st.write(f"*{format_datetime(timestamp_obj)}*")
+                
+                # # Image placeholder
+                # st.image("https://placekitten.com/600/400", use_column_width=True)
+                
+                # Extract caption and visual description from content
+                if 'content' in post:
+                    content = post['content']
+                    
+                    # Split content into caption and visual description
+                    caption_start = content.lower().find('caption:')
+                    visual_start = content.lower().find('visual description:')
+                    
+                    if caption_start != -1 and visual_start != -1:
+                        caption = content[caption_start + 8:visual_start].strip()
+                        visual_desc = content[visual_start + 18:].strip()
+                        
+                        st.write(f"**Caption:** {caption}")
+                        with st.expander("View Visual Description"):
+                            st.write(visual_desc)
+                
+                # Interactions
+                col1, col2 = st.columns([1, 4])
+                with col1:
+                    st.write(f"❤️ {post['likes']} Likes")
+                with col2:
+                    if st.button("Like 👍", key=f"like_{timestamp_obj}"):
+                        post['likes'] += 1
+                        simulator._save_instagram_history()
+                        st.experimental_rerun()
+                
+                # Comments
+                st.write("**Comments**")
+                for comment in post.get('comments', []):
+                    st.markdown(f"""
+                    <div style='padding: 8px; margin: 4px 0; background-color: #f0f2f5; border-radius: 8px;'>
+                        <strong>{comment['author']}</strong>: {comment['text']}
+                    </div>
+                    """, unsafe_allow_html=True)
+                
+                # Add comment
+                with st.form(key=f"comment_form_{timestamp_obj}"):
+                    new_comment = st.text_input("Add a comment...", key=f"comment_input_{timestamp_obj}")
+                    if st.form_submit_button("Post Comment"):
+                        if new_comment:
+                            if 'comments' not in post:
+                                post['comments'] = []
+                            post['comments'].append({
+                                'author': random.choice([char['name'] for char in simulator.supporting_characters]),
+                                'text': new_comment,
+                                'timestamp': datetime.now().isoformat()
+                            })
+                            simulator._save_instagram_history()
+                            st.experimental_rerun()
+                
+                st.markdown("---")
 
 elif platform == "Twitter":
     st.subheader("Twitter")
