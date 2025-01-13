@@ -179,34 +179,37 @@ class CharacterSimulator:
         
         
         num_initial_comments = random.randint(2, 4)
-        a
         
-        if self._available_characters:  
+        
+        if self._available_characters:
+            print(f"Available characters before generating comments: {self._available_characters}")  
             for _ in range(num_initial_comments):
-                commenter = random.choice(self._available_characters)
+                if self._available_characters: 
+                  commenter = random.choice(self._available_characters)
                 
-                if self._should_interact(commenter["data"], self.dna, 
+                  if self._should_interact(commenter["data"], self.dna, 
                                     self.relationships.get(f"{commenter['name']}_{self.name}", 50)):
-                    
-                    comment_prompt = f"""
-                    You are {commenter['name']}, with these traits:
-                    Personality: {commenter['data']['personality']}
-                    Current mood: {commenter['data'].get('current_mood', 'Neutral')}
-                    
-                    Generate a natural comment for this Instagram post:
-                    {post_data['content']}
-                    """
-                    
-                    initial_comment = {
-                        'author': commenter['name'],
-                        'text': generate_gemini_content(comment_prompt),
-                        'timestamp': timestamp,
-                        'id': str(uuid.uuid4())
-                    }
-                    
-                    
-                    thread = self._generate_comment_thread(post, initial_comment)
-                    post['comments'].extend(thread)
+                      
+                      comment_prompt = f"""
+                      You are {commenter['name']}, with these traits:
+                      Personality: {commenter['data']['personality']}
+                      Current mood: {commenter['data'].get('current_mood', 'Neutral')}
+                      
+                      Generate a natural comment for this Instagram post:
+                      {post_data['content']}
+                      """
+                      
+                      initial_comment = {
+                          'author': commenter['name'],
+                          'text': generate_gemini_content(comment_prompt),
+                          'timestamp': timestamp,
+                          'id': str(uuid.uuid4())
+                      }
+                      
+                      
+                      thread = self._generate_comment_thread(post, initial_comment)
+                      post['comments'].extend(thread)
+                
         
         self.instagram_history.append(post)
         self._save_instagram_history()
