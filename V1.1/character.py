@@ -1,13 +1,17 @@
 import random
 from datetime import datetime
 from typing import Dict, Any, List
-from data_handler import load_character_dna, save_character_dna, load_json, save_json, load_supporting_characters
+from data_handler import load_character_dna, save_character_dna, load_json, save_json, load_supporting_characters,backfill_last_update
 from gemini_integration import generate_gemini_content
 from config import DNA_FILE, INSTAGRAM_HISTORY_FILE, TWITTER_HISTORY_FILE, WHATSAPP_HISTORY_FILE, RANDOM_EVENTS_FILE, SUPPORTING_CHARS_DIR, RELATIONSHIP_FILE
 import uuid
 
 class CharacterSimulator:
     def __init__(self):
+        
+        backfill_last_update(INSTAGRAM_HISTORY_FILE)
+
+        
         self.dna = load_character_dna(DNA_FILE)
         self.instagram_history = load_json(INSTAGRAM_HISTORY_FILE)
         self.twitter_history = load_json(TWITTER_HISTORY_FILE)
@@ -21,21 +25,28 @@ class CharacterSimulator:
 
     def _refresh_available_characters(self):
         """Refreshes the list of available supporting characters with weights."""
-        print("DEBUG: Entering _refresh_available_characters")
         self.supporting_characters = load_supporting_characters(SUPPORTING_CHARS_DIR)
-        print(f"DEBUG: Loaded supporting characters: {self.supporting_characters}")
-        relationships = load_json(RELATIONSHIP_FILE)
-        print(f"DEBUG: Loaded relationships: {relationships}")
+        self.relationships = load_json(RELATIONSHIP_FILE)
         self._available_characters = []
+
         for char_name, char_data in self.supporting_characters.items():
-            weight = self.relationships.get(char_name, {}).get("interaction_frequency", 0.1) if self.relationships else 0.1
-            self._available_characters.append({
-                "name": char_name,
-                "data": char_data,
-                "weight": weight
-            })
-        print(f"DEBUG: _available_characters after populating: {self._available_characters}")
-        print("DEBUG: Exiting _refresh_available_characters")
+            weight = self.relationships.get(char_name, {}).get("interaction_frequency", 0.1)  
+            if weight > 0:  
+                self._available_characters.append({
+                    "name": char_name,
+                    "data": char_data,
+                    "weight": weight
+                })
+
+        if not self._available_characters:
+            print("DEBUG: No available characters found after refresh. Check relationships.json or supporting characters.")
+    def _get_random_supporting_character(self):
+        if not self._available_characters:
+            print("DEBUG: _available_characters is empty. Returning None.")
+            return None
+        weights = [char["weight"] for char in self._available_characters]
+        return random.choices([char["data"] for char in self._available_characters], weights=weights, k=1)[0]
+
 
     def _get_character_context(self, character_dna):
        """Creates a string with character context for the llm prompt"""
@@ -172,9 +183,9 @@ class CharacterSimulator:
             'comments': [],
         }
 
-        print(f"DEBUG: Before refreshing in simulate_instagram_post, _available_characters length: {len(self._available_characters)}") # Debugging line
-        self._refresh_available_characters() # Refresh here
-        print(f"DEBUG: After refreshing in simulate_instagram_post, _available_characters length: {len(self._available_characters)}") # Debugging line
+        print(f"DEBUG: Before refreshing in simulate_instagram_post, _available_characters length: {len(self._available_characters)}") 
+        self._refresh_available_characters() 
+        print(f"DEBUG: After refreshing in simulate_instagram_post, _available_characters length: {len(self._available_characters)}") 
 
         num_initial_comments = random.randint(2, 4)
 
@@ -215,50 +226,38 @@ class CharacterSimulator:
         current_time = datetime.now()
 
         for post in self.instagram_history:
-
-            if 'last_update' in post:
-                last_update = datetime.fromisoformat(post['last_update'])
+            last_update = post.get('last_update', None)  
+            if last_update:
+                last_update = datetime.fromisoformat(last_update)
                 if (current_time - last_update).total_seconds() < 5:
-                    continue
+                    continue  
 
-            print(f"DEBUG: Before refreshing in update_post_interactions, _available_characters length: {len(self._available_characters)}") # Debugging line
-            self._refresh_available_characters() # Refresh here
-            print(f"DEBUG: After refreshing in update_post_interactions, _available_characters length: {len(self._available_characters)}") # Debugging line
+            self._refresh_available_characters()  
 
             if random.random() < 0.9 and self._available_characters:
-
                 commenter = random.choice(self._available_characters)
 
-                if self._should_interact(commenter['data'],
-                                    {'name': post['author']},
-                                    self.relationships.get(f"{commenter['name']}_{post['author']}", 50)):
-
+                if self._should_interact(commenter['data'], {'name': post['author']},
+                                        self.relationships.get(f"{commenter['name']}_{post['author']}", 50)):
                     comment_prompt = f"""
                     You are {commenter['name']}, discovering this post:
                     {post['content']}
 
                     Generate a natural, initial comment.
                     """
-
                     initial_comment = {
                         'author': commenter['name'],
                         'text': generate_gemini_content(comment_prompt),
                         'timestamp': current_time.isoformat(),
                         'id': str(uuid.uuid4())
                     }
-
                     thread = self._generate_comment_thread(post, initial_comment)
-                    post['comments'].extend(thread)
+                    post.setdefault('comments', []).extend(thread)
 
-            for comment in post.get('comments', []): # Use .get() to avoid KeyError
-                if 'parent_id' not in comment:
-                    if random.random() < 0.2 and self._available_characters:
-                        thread = self._generate_comment_thread(post, comment)
-                        post['comments'].extend(thread[1:])
-
-            post['last_update'] = current_time.isoformat()
+            post['last_update'] = current_time.isoformat()  
 
         self._save_instagram_history()
+
 
     def simulate_twitter_post(self):
         post_data = self._generate_social_media_post("Twitter")
