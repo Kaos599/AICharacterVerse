@@ -40,6 +40,9 @@ class CharacterSimulator:
 
         if not self._available_characters:
             print("DEBUG: No available characters found after refresh. Check relationships.json or supporting characters.")
+        print(f"DEBUG: Relationships loaded: {self.relationships}")
+        print(f"DEBUG: Available characters after refresh: {self._available_characters}")
+
     def _get_random_supporting_character(self):
         if not self._available_characters:
             print("DEBUG: _available_characters is empty. Returning None.")
