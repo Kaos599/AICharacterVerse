@@ -57,17 +57,6 @@ def load_json(filepath: str) -> Any:
             return json.load(f)
     return []
 
-def load_supporting_characters(directory: str) -> Dict[str, Dict[str, Any]]:
-    """Loads all supporting characters from JSON files in the specified directory."""
-    characters = {}
-    for filename in os.listdir(directory):
-        if filename.endswith(".json"):
-            filepath = os.path.join(directory, filename)
-            char_data = load_character_dna(filepath)
-            if char_data and 'name' in char_data:
-               characters[char_data['name']] = char_data
-    return characters
-
 def backfill_last_update(file_path: str):
     """
     Ensures all posts in the specified JSON file have the 'last_update' key.

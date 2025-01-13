@@ -106,7 +106,14 @@ class CharacterSimulator:
 
         interaction_chance = base_chance * social_modifier * mood_modifier
 
-        return random.random() < interaction_chance
+        print(f"DEBUG: Interaction check for {char1_name} and {char2_name}:")
+        print(f"DEBUG:   Relationship Strength: {relationship_strength}")
+        print(f"DEBUG:   Social Modifier: {social_modifier}")
+        print(f"DEBUG:   Mood Modifier: {mood_modifier}")
+        print(f"DEBUG:   Interaction Chance: {interaction_chance}")
+        result = random.random() < interaction_chance
+        print(f"DEBUG:   Result: {result}")
+        return result
 
     def _generate_comment_thread(self, post, initial_comment, max_depth=3):
         thread = [initial_comment]
@@ -179,54 +186,63 @@ class CharacterSimulator:
         return thread
 
     def simulate_instagram_post(self):
-        """Simulates creating an Instagram post with interactive comment threads."""
-        post_data = self._generate_social_media_post("Instagram")
-        timestamp = datetime.now().isoformat()
+            """Simulates creating an Instagram post with interactive comment threads."""
+            post_data = self._generate_social_media_post("Instagram")
+            timestamp = datetime.now().isoformat()
 
-        post = {
-            'timestamp': timestamp,
-            'author': self.name,
-            'content': post_data['content'],
-            'likes': random.randint(50, 200),
-            'comments': [],
-        }
+            post = {
+                'timestamp': timestamp,
+                'author': self.name,
+                'content': post_data['content'],
+                'likes': random.randint(50, 200),
+                'comments': [],
+            }
 
-        print(f"DEBUG: Before refreshing in simulate_instagram_post, _available_characters length: {len(self._available_characters)}") 
-        self._refresh_available_characters() 
-        print(f"DEBUG: After refreshing in simulate_instagram_post, _available_characters length: {len(self._available_characters)}") 
+            print(f"DEBUG: Before refreshing in simulate_instagram_post, _available_characters length: {len(self._available_characters)}")
+            self._refresh_available_characters()
+            print(f"DEBUG: After refreshing in simulate_instagram_post, _available_characters length: {len(self._available_characters)}")
 
-        num_initial_comments = random.randint(2, 4)
+            num_initial_comments = random.randint(2, 4)
 
-        if self._available_characters:
-            print(f"Available characters before generating comments: {self._available_characters}")
-            for _ in range(num_initial_comments):
+            if self._available_characters:
+                print(f"DEBUG: Available characters before generating comments: {self._available_characters}")
+                for _ in range(num_initial_comments):
                     commenter_name = random.choice(self._available_characters)
+                    print(f"DEBUG: Attempting comment from: {commenter_name}")  # Added
                     commenter_data = self.supporting_characters.get(commenter_name)
 
-                    if commenter_data and self._should_interact(commenter_name, self.name, self.relationships.get(commenter_name, {}).get("interaction_frequency", 0.5) * 100):
+                    if commenter_data:
+                        print(f"DEBUG: Commenter data found for {commenter_name}")  # Added
+                        relationship_strength = self.relationships.get(commenter_name, {}).get("interaction_frequency", 0.5) * 100
+                        should_interact = self._should_interact(commenter_name, self.name, relationship_strength)
+                        print(f"DEBUG: Should {commenter_name} interact? {should_interact}")  # Added
+                        if should_interact:
+                            comment_prompt = f"""
+                            You are {commenter_name}, with these traits:
+                            Personality: {commenter_data.get('Personality', {})}
+                            Current mood: {commenter_data.get('current_mood', 'Neutral')}
 
-                        comment_prompt = f"""
-                        You are {commenter_name}, with these traits:
-                        Personality: {commenter_data.get('Personality', {})}
-                        Current mood: {commenter_data.get('current_mood', 'Neutral')}
+                            Generate a natural comment for this Instagram post:
+                            {post_data['content']}
+                            """
 
-                        Generate a natural comment for this Instagram post:
-                        {post_data['content']}
-                        """
+                            initial_comment = {
+                                'author': commenter_name,
+                                'text': generate_gemini_content(comment_prompt),
+                                'timestamp': timestamp,
+                                'id': str(uuid.uuid4())
+                            }
 
-                        initial_comment = {
-                            'author': commenter_name,
-                            'text': generate_gemini_content(comment_prompt),
-                            'timestamp': timestamp,
-                            'id': str(uuid.uuid4())
-                        }
+                            thread = self._generate_comment_thread(post, initial_comment)
+                            post['comments'].extend(thread)
+                        else:
+                            print(f"DEBUG: {commenter_name} did not interact.")  # Added
+                    else:
+                        print(f"DEBUG: Commenter data NOT found for {commenter_name}")  # Added
 
-                        thread = self._generate_comment_thread(post, initial_comment)
-                        post['comments'].extend(thread)
-
-        post['last_update'] = timestamp
-        self.instagram_history.append(post)
-        self._save_instagram_history()
+            post['last_update'] = timestamp
+            self.instagram_history.append(post)
+            self._save_instagram_history()
 
     def update_post_interactions(self):
         """Updates post interactions periodically."""
