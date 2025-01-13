@@ -74,16 +74,16 @@ platform = st.selectbox("Select Platform", ["Instagram", "Twitter", "WhatsApp", 
 if platform == "Instagram":
     st.subheader("Instagram")
     
-    
+    # Add the live updates checkbox in the sidebar
     auto_update = st.sidebar.checkbox("Enable Live Updates", value=True)
     
     for post in reversed(simulator.instagram_history):
         with st.container():
-            
+            # Create a clean card-like container
             st.markdown("""
             <style>
             .instagram-post {
-                border: 1px solid 
+                border: 1px solid #dbdbdb;
                 border-radius: 8px;
                 padding: 12px;
                 margin-bottom: 20px;
@@ -92,9 +92,9 @@ if platform == "Instagram":
             </style>
             """, unsafe_allow_html=True)
             
-            
+            # Post container
             with st.container():
-                
+                # Header with profile picture and name/timestamp
                 col1, col2 = st.columns([1, 5])
                 with col1:
                     st.image("https://placekitten.com/50/50", width=50)
@@ -103,10 +103,10 @@ if platform == "Instagram":
                     st.write(f"**{post.get('author', simulator.name)}**")
                     st.write(f"*{format_datetime(timestamp_obj)}*")
                 
-                
+                # Post image
                 st.image("https://placekitten.com/600/400", use_column_width=True)
                 
-                
+                # Post content (caption and visual description)
                 if 'content' in post:
                     content = post['content']
                     caption_start = content.lower().find('caption:')
@@ -120,7 +120,7 @@ if platform == "Instagram":
                         with st.expander("View Visual Description"):
                             st.write(visual_desc)
                 
-                
+                # Likes and interaction buttons
                 col1, col2 = st.columns([1, 4])
                 with col1:
                     st.write(f"❤️ {post['likes']} Likes")
@@ -130,25 +130,25 @@ if platform == "Instagram":
                         simulator._save_instagram_history()
                         st.experimental_rerun()
                 
-                
+                # Comments section
                 st.write("**Comments**")
                 if 'comments' in post:
                     for comment in post.get('comments', []):
                         with st.container():
-                            
+                            # Calculate indentation based on parent_id
                             indent = 0
                             if 'parent_id' in comment:
-                                indent = 20  
+                                indent = 20  # pixels
                             
                             st.markdown(f"""
                             <div style='margin-left: {indent}px; padding: 8px; 
-                                      margin-top: 4px; background-color: 
+                                      margin-top: 4px; background-color: #f0f2f5; 
                                       border-radius: 8px;'>
                                 <strong>{comment['author']}</strong>: {comment['text']}
                             </div>
                             """, unsafe_allow_html=True)
                 
-                
+                # Add comment form
                 with st.form(key=f"comment_form_{timestamp_obj}"):
                     new_comment = st.text_input("Add a comment...", key=f"comment_input_{timestamp_obj}")
                     if st.form_submit_button("Post Comment"):
@@ -156,7 +156,7 @@ if platform == "Instagram":
                             if 'comments' not in post:
                                 post['comments'] = []
                             
-                            
+                            # Create new comment
                             comment = {
                                 'author': simulator.name,
                                 'text': new_comment,
@@ -164,7 +164,7 @@ if platform == "Instagram":
                                 'id': str(uuid.uuid4())
                             }
                             
-                            
+                            # If this is a reply to another comment
                             last_comment = post['comments'][-1] if post['comments'] else None
                             if last_comment:
                                 comment['parent_id'] = last_comment.get('id')
@@ -175,7 +175,7 @@ if platform == "Instagram":
                 
                 st.markdown("---")
     
-    
+    # Auto-update functionality
     if auto_update:
         simulator.update_post_interactions()
         time.sleep(5)
@@ -234,17 +234,6 @@ def display_comment_thread(comments, parent_id=None, depth=0):
                 """, unsafe_allow_html=True)
                 
                 display_comment_thread(comments, comment['id'], depth + 1)
-
-    
-    if 'comments' in post:
-        st.write("**Comments**")
-        display_comment_thread(post['comments'])
-
-    
-    if st.sidebar.checkbox("Enable Live Updates", value=True):
-        simulator.update_post_interactions()
-        time.sleep(5)  
-        st.experimental_rerun()
 
 def run_scheduler():
     while True:
