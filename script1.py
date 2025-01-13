@@ -251,20 +251,17 @@ class CharacterSimulator:
         likes = random.randint(10, 300)
         comments = []
         num_comments = random.randint(0, 5)
-        
+
         for _ in range(num_comments):
-          commenter = self._get_random_supporting_character()
-          if commenter:
-                
-            commenter_context = self._get_character_context(commenter)
-            
-            relationship = self.relationships.get(commenter["name"],{}).get("relationship", "unknown")
-            
-            prompt = f"You are simulating a comment on an instagram post. The post description is {post_description} and the content is '{post_content}'. {commenter_context} Simulate a short comment from {commenter['name']} in response to the post. The relationship with the poster is : {relationship}"
-            comment_text = generate_gemini_content(prompt) if model else "Nice post!"
-            comments.append({"author": commenter['name'], "text": comment_text})
-            
-        post = {"timestamp": datetime.now(), "description": post_description ,"content": post_content, "likes": likes, "comments": comments}
+            commenter = self._get_random_supporting_character()
+            if commenter:
+                commenter_context = self._get_character_context(commenter)
+                relationship = self.relationships.get(commenter["name"],{}).get("relationship", "unknown")
+                prompt = f"You are simulating a comment on an instagram post. The post description is {post_description} and the content is '{post_content}'. {commenter_context} Simulate a short comment from {commenter['name']} in response to the post. The relationship with the poster is : {relationship}"
+                comment_text = generate_gemini_content(prompt) if model else "Nice post!"
+                comments.append({"author": commenter['name'], "text": comment_text})
+
+        post = {"timestamp": datetime.now().isoformat(), "description": post_description ,"content": post_content, "likes": likes, "comments": comments}
         self.instagram_history.append(post)
         save_json(INSTAGRAM_HISTORY_FILE, self.instagram_history)
         return post
@@ -272,7 +269,7 @@ class CharacterSimulator:
     def simulate_twitter_post(self):
         post_data = self._generate_social_media_post("Twitter")
         post_content = post_data.get('content', "Error generating tweet")
-        post = {"timestamp": datetime.now(), "content": post_content}
+        post = {"timestamp": datetime.now().isoformat(), "content": post_content}
         self.twitter_history.append(post)
         save_json(TWITTER_HISTORY_FILE, self.twitter_history)
         return post
@@ -284,27 +281,26 @@ class CharacterSimulator:
 
         message_to_recipient = self._generate_whatsapp_message(recipient)
         self.whatsapp_history.append({
-            "timestamp": datetime.now(),
+            "timestamp": datetime.now().isoformat(),
             "sender": self.name,
             "recipient": recipient['name'],
             "message": message_to_recipient
         })
 
-        
         sender_context = self._get_character_context(self.dna)
         reciever_context = self._get_character_context(recipient)
         prompt = f"You are simulating a whatsapp message response. {sender_context} The main character message was '{message_to_recipient}'. {reciever_context} Simulate a short Whatsapp message from {recipient['name']} to {self.name} in response to the above message."
         response_message = generate_gemini_content(prompt) if model else "Okay."
         self.whatsapp_history.append({
-            "timestamp": datetime.now(),
+            "timestamp": datetime.now().isoformat(),
             "sender": recipient['name'],
             "recipient": self.name,
             "message": response_message
         })
 
         save_json(WHATSAPP_HISTORY_FILE, self.whatsapp_history)
-        return self.whatsapp_history[-2:] 
-
+        return self.whatsapp_history[-2:]
+        
     def simulate_daily_routine(self):
         hour = datetime.now().hour
         event = None
