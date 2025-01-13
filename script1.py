@@ -236,7 +236,7 @@ class CharacterSimulator:
             comment_text = generate_gemini_content(prompt) if model else "Nice post!"
             comments.append({"author": commenter['name'], "text": comment_text})
             
-        post = {"timestamp": datetime.now().isoformat(), "description": post_description ,"content": post_content, "likes": likes, "comments": comments}
+        post = {"timestamp": datetime.now().isoformat(),"content": post_content, "likes": likes, "comments": comments}
         self.instagram_history.append(post)
         save_json(INSTAGRAM_HISTORY_FILE, self.instagram_history)
         return post
