@@ -27,20 +27,20 @@ class CharacterSimulator:
         """Refreshes the list of available supporting character names."""
         self.supporting_characters = load_supporting_characters(SUPPORTING_CHARS_DIR)
         self.relationships = load_json(RELATIONSHIP_FILE)
-        self._available_characters = list(self.relationships.keys()) # Just the names
+        self._available_characters = list(self.relationships.keys()) 
 
     def _get_random_supporting_character(self):
         if not self._available_characters:
             print("WARNING: No available supporting characters. Returning None.")
             return None
 
-        char_name = random.choice(self._available_characters) # Pick a name
+        char_name = random.choice(self._available_characters) 
         char_data = self.supporting_characters.get(char_name)
-        if not char_data:  # Handle missing character data
+        if not char_data:  
             print(f"WARNING: Data not found for {char_name}. Returning None")
             return None
 
-        return char_data  # Return the character data directly
+        return char_data  
 
 
     def _get_character_context(self, character_dna):
@@ -119,11 +119,11 @@ class CharacterSimulator:
         thread = [initial_comment]
         current_depth = 0
 
-        commenters = set()  # Keep track of who has commented
+        commenters = set()  
 
         while current_depth < max_depth:
             last_comment = thread[-1]
-            commenters.add(last_comment['author'])  # Add the last commenter
+            commenters.add(last_comment['author'])  
 
             potential_responders = [
                 char_name for char_name in self._available_characters
@@ -134,13 +134,13 @@ class CharacterSimulator:
                 potential_responders.append(self.name)
             
             if not potential_responders:
-                break # no one left to comment
+                break 
 
-            # Prioritize best friend if available
+            
             best_friend_name = next((name for name, rel in self.relationships.items() if rel.get("relationship_type") == "Best Friend"), None)
             if best_friend_name and best_friend_name in potential_responders and best_friend_name not in commenters:
                 responder_name = best_friend_name
-                potential_responders.remove(responder_name) # remove from list so they dont comment twice by random chance as well
+                potential_responders.remove(responder_name) 
             elif potential_responders:
               responder_name = random.choice(potential_responders)
             else:
@@ -167,7 +167,7 @@ class CharacterSimulator:
                         response_text = generate_gemini_content(response_prompt)
 
                         thread.append({
-                            'author': responder_name,  # Corrected: Use responder_name
+                            'author': responder_name,  
                             'text': response_text,
                             'timestamp': datetime.now().isoformat(),
                             'parent_id': last_comment.get('id'),
@@ -208,14 +208,14 @@ class CharacterSimulator:
                 print(f"DEBUG: Available characters before generating comments: {self._available_characters}")
                 for _ in range(num_initial_comments):
                     commenter_name = random.choice(self._available_characters)
-                    print(f"DEBUG: Attempting comment from: {commenter_name}")  # Added
+                    print(f"DEBUG: Attempting comment from: {commenter_name}")  
                     commenter_data = self.supporting_characters.get(commenter_name)
 
                     if commenter_data:
-                        print(f"DEBUG: Commenter data found for {commenter_name}")  # Added
+                        print(f"DEBUG: Commenter data found for {commenter_name}")  
                         relationship_strength = self.relationships.get(commenter_name, {}).get("interaction_frequency", 0.5) * 100
-                        should_interact = self._should_interact(commenter_name, self.name, relationship_strength)
-                        print(f"DEBUG: Should {commenter_name} interact? {should_interact}")  # Added
+                        should_interact = self._should_interact(commenter_name, self.name, relationship_strength) 
+                        print(f"DEBUG: Should {commenter_name} interact? {should_interact}")  
                         if should_interact:
                             comment_prompt = f"""
                             You are {commenter_name}, with these traits:
@@ -236,9 +236,9 @@ class CharacterSimulator:
                             thread = self._generate_comment_thread(post, initial_comment)
                             post['comments'].extend(thread)
                         else:
-                            print(f"DEBUG: {commenter_name} did not interact.")  # Added
+                            print(f"DEBUG: {commenter_name} did not interact.")  
                     else:
-                        print(f"DEBUG: Commenter data NOT found for {commenter_name}")  # Added
+                        print(f"DEBUG: Commenter data NOT found for {commenter_name}")  
 
             post['last_update'] = timestamp
             self.instagram_history.append(post)
@@ -286,7 +286,52 @@ class CharacterSimulator:
     def simulate_twitter_post(self):
         post_data = self._generate_social_media_post("Twitter")
         post_content = post_data.get('content', "Error generating tweet")
-        post = {"timestamp": datetime.now().isoformat(), "content": post_content}
+        timestamp = datetime.now().isoformat()
+
+        post = {
+            "timestamp": timestamp,
+            "author": self.name,
+            "content": post_content,
+            "replies": [],
+            "likes": random.randint(10, 50),
+            'id': str(uuid.uuid4())  
+        }
+
+        print(f"DEBUG: Starting Twitter post simulation. Available characters: {self._available_characters}")
+        self._refresh_available_characters()
+        num_initial_replies = random.randint(1, 3)
+
+        if self._available_characters:
+            print(f"DEBUG: Available characters for Twitter replies: {self._available_characters}")
+            for _ in range(num_initial_replies):
+                replier_name = random.choice(self._available_characters)
+                print(f"DEBUG: Attempting reply from: {replier_name}")
+                replier_data = self.supporting_characters.get(replier_name)
+
+                if replier_data:
+                    print(f"DEBUG: Replier data found for {replier_name}")
+                    relationship_strength = self.relationships.get(replier_name, {}).get("interaction_frequency", 0.5) * 100
+                    should_interact = self._should_interact(replier_name, self.name, relationship_strength)
+                    print(f"DEBUG: Should {replier_name} reply? {should_interact}")
+                    if should_interact:
+                        reply_prompt = f"""
+                        You are {replier_name}.
+                        The following is a tweet by {self.name}: "{post_content}"
+                        Generate a short, natural reply to this tweet (under 280 characters).
+                        """
+                        initial_reply = {
+                            'author': replier_name,
+                            'text': generate_gemini_content(reply_prompt),
+                            'timestamp': timestamp,
+                            'id': str(uuid.uuid4()),
+                            'parent_id': post['id']
+                        }
+                        post['replies'].append(initial_reply) 
+                    else:
+                        print(f"DEBUG: {replier_name} did not reply.")
+                else:
+                    print(f"DEBUG: Replier data NOT found for {replier_name}")
+
         self.twitter_history.append(post)
         save_json(TWITTER_HISTORY_FILE, self.twitter_history)
         return post

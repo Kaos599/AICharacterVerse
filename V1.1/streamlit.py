@@ -184,10 +184,27 @@ if platform == "Instagram":
 elif platform == "Twitter":
     st.subheader("Twitter")
     for tweet in reversed(simulator.twitter_history):
-        timestamp_obj = datetime.fromisoformat(tweet['timestamp'])
-        st.write(f"**{simulator.name}** - {format_datetime(timestamp_obj)}")
-        st.write(tweet['content'])
-        st.markdown("---")
+        with st.container():
+            author = tweet.get('author', 'Unknown Author')  # Get author, default to 'Unknown Author'
+            if 'timestamp' in tweet:
+                timestamp_obj = datetime.fromisoformat(tweet['timestamp'])
+                st.write(f"**{author}** - {format_datetime(timestamp_obj)}")
+            else:
+                st.write(f"**{author}** - No Timestamp") # Handle missing timestamp as well
+            st.write(tweet.get('content', 'No content')) # Use .get for content too
+            st.write(f"❤️ {tweet.get('likes', 0)} Likes")
+
+            # Display Replies
+            if 'replies' in tweet and tweet['replies']:
+                st.write("**Replies**")
+                for reply in tweet['replies']:
+                    with st.container():
+                        st.markdown(f"""
+                        <div style='margin-left: 20px; padding: 8px; margin-top: 4px; background-color: #f0f2f5; border-radius: 8px; color: black;'>
+                            <strong>{reply.get('author', 'Unknown')}</strong>: {reply['text']}
+                        </div>
+                        """, unsafe_allow_html=True)
+            st.markdown("---")
 
 elif platform == "WhatsApp":
     st.subheader("WhatsApp")
