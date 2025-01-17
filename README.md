@@ -19,7 +19,7 @@ Follow these instructions to run the AI character simulator on your local machin
 2. **Navigate to the `V1.2` directory:** Open your terminal or command prompt and navigate to the downloaded `V1.2` folder. For example:
    ```bash
    cd path/to/your/downloaded/V1.2
-   ```
+   ``` 
 
 3. **Create a virtual environment (recommended):** This helps isolate the project's dependencies.
    ```bash
