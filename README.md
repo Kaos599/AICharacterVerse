@@ -1,4 +1,4 @@
-# Dynamic AI Character Social Media Simulator
+# Dynamic AI Character Social Media Simulator 
 
 This project simulates the online presence of a dynamic AI character across various social media platforms like Instagram, Twitter, and WhatsApp. The character's personality, daily routines, and relationships influence the content of their posts and interactions, creating a believable and diverse online life.
 
