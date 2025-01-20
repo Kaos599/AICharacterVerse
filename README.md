@@ -5,7 +5,7 @@ This project simulates the online presence of a dynamic AI character across vari
 ## Getting Started
 
 Follow these instructions to run the AI character simulator on your local machine.
-
+ 
 ### Prerequisites
 
 * **Python 3.7+:** Make sure you have Python installed on your system. You can download it from [python.org](https://www.python.org/downloads/).
