@@ -12,7 +12,7 @@ Follow these instructions to run the AI character simulator on your local machin
 * **pip:** Python's package installer. It usually comes with Python.
 * **A Google Gemini API Key:** You'll need an API key from Google AI to generate the social media content. You can obtain one by following the instructions on the [Google AI for Developers site](https://ai.google.dev/).
 
-### Installation and Setup
+### Installation and Setup 
 
 1. **Download the `V1.2` folder:** This folder contains the latest working version of the project. You can download it directly from the repository interface.
 
